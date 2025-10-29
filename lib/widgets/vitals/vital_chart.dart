@@ -1,244 +1,180 @@
-/*import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../models/vital_data.dart';
-import '../../constants/app_colors.dart';
+import '../common/app_card.dart';
 
 class VitalChart extends StatelessWidget {
+  final String title;
   final List<VitalData> data;
-  final String type; // 'heartRate', 'oxygenSaturation', 'respiratoryRate'
+  final String unit;
+  final Color color;
+  final double? minY;
+  final double? maxY;
 
   const VitalChart({
     Key? key,
+    required this.title,
     required this.data,
-    required this.type,
+    required this.unit,
+    this.color = const Color(0xFF4CAF50),
+    this.minY,
+    this.maxY,
   }) : super(key: key);
-
-  String get chartTitle {
-    switch (type) {
-      case 'heartRate':
-        return 'Puls-Verlauf';
-      case 'oxygenSaturation':
-        return 'Sauerstoffsättigung-Verlauf';
-      case 'respiratoryRate':
-        return 'Atemfrequenz-Verlauf';
-      default:
-        return '';
-    }
-  }
-
-  Color get chartColor {
-    switch (type) {
-      case 'heartRate':
-        return AppColors.emergencyRed;
-      case 'oxygenSaturation':
-        return AppColors.primaryGreen;
-      case 'respiratoryRate':
-        return AppColors.tealAccent;
-      default:
-        return AppColors.primaryGreen;
-    }
-  }
-
-  List<FlSpot> get spots {
-    final filteredData = data.where((d) {
-      switch (type) {
-        case 'heartRate':
-          return d.heartRate != null;
-        case 'oxygenSaturation':
-          return d.oxygenSaturation != null;
-        case 'respiratoryRate':
-          return d.respiratoryRate != null;
-        default:
-          return false;
-      }
-    }).toList();
-
-    if (filteredData.isEmpty) return [];
-
-    // Sortiere nach Datum
-    filteredData.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-
-    // Nehme die letzten 10 Messungen
-    final displayData = filteredData.length > 10
-        ? filteredData.sublist(filteredData.length - 10)
-        : filteredData;
-
-    return displayData.asMap().entries.map((entry) {
-      double value = 0;
-      switch (type) {
-        case 'heartRate':
-          value = entry.value.heartRate!.toDouble();
-          break;
-        case 'oxygenSaturation':
-          value = entry.value.oxygenSaturation!.toDouble();
-          break;
-        case 'respiratoryRate':
-          value = entry.value.respiratoryRate!.toDouble();
-          break;
-      }
-      return FlSpot(entry.key.toDouble(), value);
-    }).toList();
-  }
-
-  double get minY {
-    switch (type) {
-      case 'heartRate':
-        return 40;
-      case 'oxygenSaturation':
-        return 85;
-      case 'respiratoryRate':
-        return 8;
-      default:
-        return 0;
-    }
-  }
-
-  double get maxY {
-    switch (type) {
-      case 'heartRate':
-        return 120;
-      case 'oxygenSaturation':
-        return 100;
-      case 'respiratoryRate':
-        return 25;
-      default:
-        return 100;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    if (spots.isEmpty) {
-      return Card(
-        elevation: 0,
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Text(
-              'Keine Daten verfügbar',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+    return AppCard(
+      backgroundColor: Colors.white,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF212121),
             ),
           ),
-        ),
-      );
-    }
-
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              chartTitle,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: Colors.grey.withOpacity(0.2),
-                        strokeWidth: 1,
-                      );
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 180,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey.withOpacity(0.2),
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        if (value.toInt() >= 0 &&
+                            value.toInt() < data.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              data[value.toInt()].time,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF757575),
+                              ),
+                            ),
+                          );
+                        }
+                        return const Text('');
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        return Text(
+                          '${value.toInt()}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF757575),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                  ),
+                ),
+                minX: 0,
+                maxX: (data.length - 1).toDouble(),
+                minY: minY ?? 0,
+                maxY: maxY ?? 200,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: data.asMap().entries.map((e) {
+                      return FlSpot(e.key.toDouble(), e.value.value);
+                    }).toList(),
+                    isCurved: true,
+                    color: color,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 3,
+                          color: Colors.white,
+                          strokeWidth: 2,
+                          strokeColor: color,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          color.withOpacity(0.3),
+                          color.withOpacity(0.0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    tooltipPadding: const EdgeInsets.all(8),
+                    tooltipBorderRadius: BorderRadius.circular(8),
+                    tooltipBorder: BorderSide(
+                      color: color,
+                      width: 2,
+                    ),
+                    getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                      return touchedBarSpots.map((barSpot) {
+                        return LineTooltipItem(
+                          '${barSpot.y.toInt()} $unit', // Tooltip-Text mit dem Wert und der Einheit
+                          const TextStyle(
+                            color: Colors.white, // Textfarbe innerhalb des Tooltips
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        );
+                      }).toList();
                     },
                   ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toInt().toString(),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= data.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final measurement = data[value.toInt()];
-                          return Text(
-                            '${measurement.dateTime.day}.${measurement.dateTime.month}',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textSecondary,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  minY: minY,
-                  maxY: maxY,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: chartColor,
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) {
-                          return FlDotCirclePainter(
-                            radius: 4,
-                            color: chartColor,
-                            strokeWidth: 2,
-                            strokeColor: Colors.white,
-                          );
-                        },
-                      ),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: chartColor.withOpacity(0.1),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-}*/
+}
+
+class VitalData {
+  final String time;
+  final double value;
+
+  VitalData({required this.time, required this.value});
+}

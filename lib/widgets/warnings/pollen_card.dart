@@ -1,153 +1,202 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-
-enum PollenLevel { none, low, medium, high, veryHigh }
-
-class PollenData {
-  final String type;
-  final PollenLevel level;
-
-  PollenData({required this.type, required this.level});
-}
+import '../common/app_card.dart';
 
 class PollenCard extends StatelessWidget {
-  final List<PollenData> pollenData;
+  final Map<String, int> pollenLevels;
+  final String location;
+  final VoidCallback? onTap;
 
   const PollenCard({
     Key? key,
-    required this.pollenData,
+    required this.pollenLevels,
+    required this.location,
+    this.onTap,
   }) : super(key: key);
 
-  Color _getColorForLevel(PollenLevel level) {
+  Color _getLevelColor(int level) {
     switch (level) {
-      case PollenLevel.none:
-        return Colors.grey;
-      case PollenLevel.low:
-        return AppColors.successGreen;
-      case PollenLevel.medium:
-        return AppColors.warningYellow;
-      case PollenLevel.high:
-        return Colors.orange;
-      case PollenLevel.veryHigh:
-        return AppColors.emergencyRed;
+      case 0:
+        return const Color(0xFF4CAF50);
+      case 1:
+        return const Color(0xFF8BC34A);
+      case 2:
+        return const Color(0xFFFFC107);
+      case 3:
+        return const Color(0xFFFF9800);
+      case 4:
+        return const Color(0xFFF44336);
+      default:
+        return const Color(0xFF9E9E9E);
     }
   }
 
-  String _getLabelForLevel(PollenLevel level) {
+  String _getLevelText(int level) {
     switch (level) {
-      case PollenLevel.none:
+      case 0:
         return 'Keine';
-      case PollenLevel.low:
-        return 'Niedrig';
-      case PollenLevel.medium:
+      case 1:
+        return 'Gering';
+      case 2:
         return 'Mittel';
-      case PollenLevel.high:
+      case 3:
         return 'Hoch';
-      case PollenLevel.veryHigh:
+      case 4:
         return 'Sehr hoch';
+      default:
+        return 'Unbekannt';
+    }
+  }
+
+  IconData _getPollenIcon(String pollenType) {
+    switch (pollenType.toLowerCase()) {
+      case 'gräser':
+        return Icons.grass;
+      case 'birke':
+      case 'erle':
+      case 'hasel':
+        return Icons.park;
+      case 'beifuß':
+      case 'ambrosia':
+        return Icons.eco;
+      default:
+        return Icons.local_florist;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.local_florist,
-                  color: AppColors.primaryGreen,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Pollenbelastung',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...pollenData.map((data) {
-              final color = _getColorForLevel(data.level);
-              final label = _getLabelForLevel(data.level);
+    final maxLevel = pollenLevels.values.reduce((a, b) => a > b ? a : b);
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+    return AppCard(
+      backgroundColor: _getLevelColor(maxLevel).withOpacity(0.1),
+      borderRadius: 12,
+      padding: const EdgeInsets.all(16),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _getLevelColor(maxLevel).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.local_florist,
+                  color: _getLevelColor(maxLevel),
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Pollenflug',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF212121),
+                      ),
+                    ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          data.type,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textPrimary,
-                          ),
+                        Icon(
+                          Icons.location_on,
+                          size: 14,
+                          color: Colors.grey[600],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            label,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: color,
-                            ),
+                        const SizedBox(width: 4),
+                        Text(
+                          location,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    LinearProgressIndicator(
-                      value: _getValueForLevel(data.level),
-                      backgroundColor: Colors.grey.withOpacity(0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                      minHeight: 6,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
                   ],
                 ),
-              );
-            }).toList(),
-          ],
-        ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _getLevelColor(maxLevel).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _getLevelText(maxLevel),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _getLevelColor(maxLevel),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...pollenLevels.entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Icon(
+                    _getPollenIcon(entry.key),
+                    size: 20,
+                    color: _getLevelColor(entry.value),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      entry.key,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF212121),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: List.generate(4, (index) {
+                      return Container(
+                        width: 8,
+                        height: 20,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          color: index < entry.value
+                              ? _getLevelColor(entry.value)
+                              : Colors.grey.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      _getLevelText(entry.value),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _getLevelColor(entry.value),
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
       ),
     );
-  }
-
-  double _getValueForLevel(PollenLevel level) {
-    switch (level) {
-      case PollenLevel.none:
-        return 0.0;
-      case PollenLevel.low:
-        return 0.25;
-      case PollenLevel.medium:
-        return 0.5;
-      case PollenLevel.high:
-        return 0.75;
-      case PollenLevel.veryHigh:
-        return 1.0;
-    }
   }
 }

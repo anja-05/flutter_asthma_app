@@ -1,115 +1,125 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../common/app_card.dart';
 
 class VitalValueCard extends StatelessWidget {
   final String title;
   final String value;
   final String unit;
-  final String status;
   final IconData icon;
   final Color color;
-  final bool isNormal;
+  final String? status;
+  final VoidCallback? onTap;
 
   const VitalValueCard({
     Key? key,
     required this.title,
     required this.value,
     required this.unit,
-    required this.status,
     required this.icon,
-    required this.color,
-    required this.isNormal,
+    this.color = const Color(0xFF4CAF50),
+    this.status,
+    this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: color.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      icon,
-                      color: color,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+    return AppCard(
+      backgroundColor: color.withOpacity(0.1),
+      borderRadius: 12,
+      padding: const EdgeInsets.all(16),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF757575),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (status != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: isNormal
-                        ? AppColors.successGreen.withOpacity(0.2)
-                        : AppColors.warningYellow.withOpacity(0.2),
+                    color: _getStatusColor().withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isNormal ? Icons.check_circle : Icons.warning,
-                        size: 14,
-                        color: isNormal ? AppColors.successGreen : AppColors.warningYellow,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        status,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isNormal ? AppColors.successGreen : AppColors.warningYellow,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    status!,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _getStatusColor(),
+                    ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  height: 1,
                 ),
-                const SizedBox(width: 8),
-                Text(
+              ),
+              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
                   unit,
                   style: TextStyle(
-                    fontSize: 18,
-                    color: AppColors.textSecondary,
+                    fontSize: 16,
+                    color: color.withOpacity(0.7),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  Color _getStatusColor() {
+    switch (status?.toLowerCase()) {
+      case 'normal':
+        return const Color(0xFF4CAF50);
+      case 'erhöht':
+      case 'niedrig':
+        return const Color(0xFFFFC107);
+      case 'kritisch':
+        return const Color(0xFFF44336);
+      default:
+        return const Color(0xFF4CAF50);
+    }
   }
 }

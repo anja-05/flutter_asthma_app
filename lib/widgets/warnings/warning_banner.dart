@@ -1,93 +1,107 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
 
-enum WarningLevel { good, moderate, high, veryHigh }
+enum WarningSeverity { info, warning, danger }
 
 class WarningBanner extends StatelessWidget {
-  final WarningLevel level;
   final String title;
-  final String description;
+  final String message;
+  final WarningSeverity severity;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onTap;
 
   const WarningBanner({
     Key? key,
-    required this.level,
     required this.title,
-    required this.description,
+    required this.message,
+    this.severity = WarningSeverity.info,
+    this.onDismiss,
+    this.onTap,
   }) : super(key: key);
 
-  Color _getColorForLevel() {
-    switch (level) {
-      case WarningLevel.good:
-        return AppColors.successGreen;
-      case WarningLevel.moderate:
-        return AppColors.warningYellow;
-      case WarningLevel.high:
-        return Colors.orange;
-      case WarningLevel.veryHigh:
-        return AppColors.emergencyRed;
+  Color _getBackgroundColor() {
+    switch (severity) {
+      case WarningSeverity.info:
+        return const Color(0xFF2196F3);
+      case WarningSeverity.warning:
+        return const Color(0xFFFFC107);
+      case WarningSeverity.danger:
+        return const Color(0xFFF44336);
     }
   }
 
-  IconData _getIconForLevel() {
-    switch (level) {
-      case WarningLevel.good:
-        return Icons.check_circle;
-      case WarningLevel.moderate:
-        return Icons.warning_amber;
-      case WarningLevel.high:
-        return Icons.warning;
-      case WarningLevel.veryHigh:
+  IconData _getIcon() {
+    switch (severity) {
+      case WarningSeverity.info:
+        return Icons.info;
+      case WarningSeverity.warning:
+        return Icons.warning_amber_rounded;
+      case WarningSeverity.danger:
         return Icons.error;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = _getColorForLevel();
-    final icon = _getIconForLevel();
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: _getBackgroundColor(),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: 32,
+        boxShadow: [
+          BoxShadow(
+            color: _getBackgroundColor().withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: color,
+                Icon(
+                  _getIcon(),
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        message,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
+                if (onDismiss != null)
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: onDismiss,
                   ),
-                ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

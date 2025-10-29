@@ -1,100 +1,87 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+
+enum PeakFlowZone { green, yellow, red }
 
 class ZoneIndicator extends StatelessWidget {
-  final int personalBest;
+  final PeakFlowZone zone;
+  final bool showLabels;
 
   const ZoneIndicator({
     Key? key,
-    required this.personalBest,
+    required this.zone,
+    this.showLabels = true,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final greenMin = (personalBest * 0.8).toInt();
-    final yellowMin = (personalBest * 0.5).toInt();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildZoneCircle(PeakFlowZone.green),
+        const SizedBox(width: 8),
+        _buildZoneCircle(PeakFlowZone.yellow),
+        const SizedBox(width: 8),
+        _buildZoneCircle(PeakFlowZone.red),
+      ],
+    );
+  }
 
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildZoneCircle(PeakFlowZone zoneType) {
+    final isActive = zone == zoneType;
+    final color = _getColorForZone(zoneType);
+
+    return Container(
+      width: isActive ? 50 : 40,
+      height: isActive ? 50 : 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isActive ? color : color.withOpacity(0.3),
+        border: Border.all(
+          color: color,
+          width: isActive ? 3 : 2,
+        ),
+        boxShadow: isActive
+            ? [
+          BoxShadow(
+            color: color.withOpacity(0.5),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ]
+            : null,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Zonen-Übersicht',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildZoneRow(
-              'Grüne Zone',
-              AppColors.greenZone,
-              '$greenMin - $personalBest l/min',
-              'Alles in Ordnung',
-            ),
-            const SizedBox(height: 12),
-            _buildZoneRow(
-              'Gelbe Zone',
-              AppColors.yellowZone,
-              '$yellowMin - ${greenMin - 1} l/min',
-              'Vorsicht geboten',
-            ),
-            const SizedBox(height: 12),
-            _buildZoneRow(
-              'Rote Zone',
-              AppColors.redZone,
-              '< $yellowMin l/min',
-              'Sofortige Maßnahmen',
-            ),
-          ],
+      child: Center(
+        child: Text(
+          _getPercentageForZone(zoneType),
+          style: TextStyle(
+            fontSize: isActive ? 14 : 12,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            color: isActive ? Colors.white : color,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildZoneRow(String title, Color color, String range, String description) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-              Text(
-                '$range - $description',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+  Color _getColorForZone(PeakFlowZone zoneType) {
+    switch (zoneType) {
+      case PeakFlowZone.green:
+        return const Color(0xFF4CAF50);
+      case PeakFlowZone.yellow:
+        return const Color(0xFFFFC107);
+      case PeakFlowZone.red:
+        return const Color(0xFFF44336);
+    }
+  }
+
+  String _getPercentageForZone(PeakFlowZone zoneType) {
+    switch (zoneType) {
+      case PeakFlowZone.green:
+        return '80%';
+      case PeakFlowZone.yellow:
+        return '50%';
+      case PeakFlowZone.red:
+        return '<50%';
+    }
   }
 }

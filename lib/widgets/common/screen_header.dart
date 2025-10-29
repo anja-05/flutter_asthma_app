@@ -1,55 +1,70 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
 
 class ScreenHeader extends StatelessWidget {
   final String title;
-  final VoidCallback onBack;
+  final String? subtitle;
+  final IconData? icon;
   final List<Widget>? actions;
+  final bool showBackButton;
 
   const ScreenHeader({
     Key? key,
     required this.title,
-    required this.onBack,
+    this.subtitle,
+    this.icon,
     this.actions,
+    this.showBackButton = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: const Color(0xFF4CAF50),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
       ),
       child: SafeArea(
-        bottom: false,
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: onBack,
-              color: AppColors.primaryGreen,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            Row(
+              children: [
+                if (showBackButton)
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                if (icon != null) ...[
+                  Icon(icon, color: Colors.white, size: 32),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                if (actions != null) ...actions!,
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryGreen,
+            if (subtitle != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                subtitle!,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.9),
                 ),
               ),
-            ),
-            if (actions != null) ...actions!,
+            ],
           ],
         ),
       ),

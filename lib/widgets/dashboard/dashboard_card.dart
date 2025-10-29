@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../common/app_card.dart';
 
 class DashboardCard extends StatelessWidget {
   final String title;
@@ -20,53 +21,43 @@ class DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: backgroundColor,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                icon,
-                size: 34,
-                color: iconColor,
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: iconColor,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      content,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.3,
-                        color: Color(0xFF212121),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return AppCard(
+      backgroundColor: backgroundColor,
+      onTap: onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            size: 34,
+            color: iconColor,
           ),
-        ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: iconColor,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  content,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.3,
+                    color: Color(0xFF212121),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

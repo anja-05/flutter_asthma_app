@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
 
-class SOSButton extends StatefulWidget {
+class SosButton extends StatefulWidget {
   final VoidCallback onPressed;
+  final bool isLoading;
 
-  const SOSButton({
+  const SosButton({
     Key? key,
     required this.onPressed,
+    this.isLoading = false,
   }) : super(key: key);
 
   @override
-  State<SOSButton> createState() => _SOSButtonState();
+  State<SosButton> createState() => _SosButtonState();
 }
 
-class _SOSButtonState extends State<SOSButton> with SingleTickerProviderStateMixin {
+class _SosButtonState extends State<SosButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -26,10 +28,7 @@ class _SOSButtonState extends State<SOSButton> with SingleTickerProviderStateMix
     )..repeat(reverse: true);
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
 
@@ -41,59 +40,67 @@ class _SOSButtonState extends State<SOSButton> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        );
-      },
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: Container(
-          width: 160,
-          height: 160,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.emergencyRed,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.emergencyRed.withOpacity(0.5),
-                blurRadius: 20,
-                spreadRadius: 5,
-              ),
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Container(
+        width: 200,
+        height: 200,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const RadialGradient(
+            colors: [
+              Color(0xFFFF5252),
+              Color(0xFFD32F2F),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(
-                Icons.warning,
-                color: Colors.white,
-                size: 50,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF5252).withOpacity(0.5),
+              blurRadius: 30,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.isLoading ? null : widget.onPressed,
+            customBorder: const CircleBorder(),
+            child: Center(
+              child: widget.isLoading
+                  ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+                  : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.warning_rounded,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'SOS',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 4,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Notfall',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 8),
-              Text(
-                'SOS',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 2,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'NOTFALL',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: 1,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

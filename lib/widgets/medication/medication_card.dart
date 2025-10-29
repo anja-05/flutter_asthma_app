@@ -1,16 +1,28 @@
-/*import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../models/medication.dart';
-import '../../constants/app_colors.dart';
+import 'package:flutter/material.dart';
+import '../common/app_card.dart';
 
 class MedicationCard extends StatelessWidget {
-  final Medication medication;
+  final String name;
+  final String dosage;
+  final String type;
+  final List<String> times;
+  final String? nextDoseTime;
+  final bool reminderEnabled;
+  final String? notes;
+  final bool takenToday;
   final VoidCallback? onTaken;
   final VoidCallback? onEdit;
 
   const MedicationCard({
     Key? key,
-    required this.medication,
+    required this.name,
+    required this.dosage,
+    required this.type,
+    required this.times,
+    this.nextDoseTime,
+    this.reminderEnabled = true,
+    this.notes,
+    this.takenToday = false,
     this.onTaken,
     this.onEdit,
   }) : super(key: key);
@@ -30,178 +42,172 @@ class MedicationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nextDose = medication.nextDoseTime;
-    final takenToday = medication.takenToday;
-
-    return Card(
-      elevation: 0,
-      color: AppColors.medicationCardBg,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    _getIconForType(medication.type),
-                    color: AppColors.primaryGreen,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        medication.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        medication.dosage,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (onEdit != null)
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
-                    color: AppColors.textSecondary,
-                    onPressed: onEdit,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Zeiten: ${medication.times.join(", ")}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            if (nextDose != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.notifications_active,
-                    size: 16,
-                    color: medication.reminderEnabled
-                        ? AppColors.primaryGreen
-                        : AppColors.textLight,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Nächste Einnahme: $nextDose',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: medication.reminderEnabled
-                          ? AppColors.primaryGreen
-                          : AppColors.textSecondary,
-                      fontWeight: medication.reminderEnabled
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (medication.notes != null && medication.notes!.isNotEmpty) ...[
-              const SizedBox(height: 8),
+    return AppCard(
+      backgroundColor: const Color(0xFFE8F5E9),
+      borderRadius: 12,
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFF4CAF50).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
+                child: Icon(
+                  _getIconForType(type),
+                  color: const Color(0xFF4CAF50),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: AppColors.textSecondary,
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF212121),
+                      ),
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        medication.notes!,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
+                    Text(
+                      dosage,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF757575),
                       ),
                     ),
                   ],
                 ),
               ),
+              if (onEdit != null)
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  color: const Color(0xFF757575),
+                  onPressed: onEdit,
+                ),
             ],
-            if (onTaken != null) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: takenToday ? null : onTaken,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: takenToday
-                        ? AppColors.successGreen.withOpacity(0.5)
-                        : AppColors.primaryGreen,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        takenToday ? Icons.check_circle : Icons.check,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        takenToday ? 'Bereits eingenommen' : 'Als eingenommen markieren',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(
+                Icons.access_time,
+                size: 16,
+                color: Color(0xFF757575),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Zeiten: ${times.join(", ")}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF757575),
                 ),
               ),
             ],
+          ),
+          if (nextDoseTime != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.notifications_active,
+                  size: 16,
+                  color: reminderEnabled
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFBDBDBD),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Nächste Einnahme: $nextDoseTime',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: reminderEnabled
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFF757575),
+                    fontWeight: reminderEnabled
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
           ],
-        ),
+          if (notes != null && notes!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Color(0xFF757575),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      notes!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF757575),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (onTaken != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: takenToday ? null : onTaken,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: takenToday
+                      ? const Color(0xFF81C784).withOpacity(0.5)
+                      : const Color(0xFF4CAF50),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      takenToday ? Icons.check_circle : Icons.check,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      takenToday
+                          ? 'Bereits eingenommen'
+                          : 'Als eingenommen markieren',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
-}*/
+}

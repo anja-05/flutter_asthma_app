@@ -1,168 +1,180 @@
-/*import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../models/peak_flow_measurement.dart';
-import '../../constants/app_colors.dart';
+import '../common/app_card.dart';
 
 class PeakFlowChart extends StatelessWidget {
-  final List<PeakFlowMeasurement> measurements;
-  final int personalBest;
+  final List<PeakFlowData> data;
+  final double personalBest;
 
   const PeakFlowChart({
     Key? key,
-    required this.measurements,
+    required this.data,
     required this.personalBest,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (measurements.isEmpty) {
-      return const Center(
-        child: Text('Keine Daten verfügbar'),
-      );
-    }
-
-    // Sortiere Messungen nach Datum
-    final sortedMeasurements = List<PeakFlowMeasurement>.from(measurements)
-      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
-
-    // Nehme die letzten 7 Messungen
-    final displayMeasurements = sortedMeasurements.length > 7
-        ? sortedMeasurements.sublist(sortedMeasurements.length - 7)
-        : sortedMeasurements;
-
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Verlauf (letzte 7 Tage)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+    return AppCard(
+      backgroundColor: Colors.white,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Peak-Flow Verlauf',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF212121),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    horizontalInterval: 100,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: Colors.grey.withOpacity(0.2),
-                        strokeWidth: 1,
-                      );
-                    },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Persönlicher Bestwert: ${personalBest.toInt()} L/min',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF757575),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 100,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey.withOpacity(0.2),
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
                   ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toInt().toString(),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        if (value.toInt() >= 0 &&
+                            value.toInt() < data.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              data[value.toInt()].date,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF757575),
+                              ),
                             ),
                           );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= displayMeasurements.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final measurement = displayMeasurements[value.toInt()];
-                          return Text(
-                            '${measurement.dateTime.day}.${measurement.dateTime.month}',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textSecondary,
-                            ),
-                          );
-                        },
-                      ),
+                        }
+                        return const Text('');
+                      },
                     ),
                   ),
-                  borderData: FlBorderData(show: false),
-                  minY: 0,
-                  maxY: personalBest.toDouble() + 100,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: displayMeasurements.asMap().entries.map((entry) {
-                        return FlSpot(
-                          entry.key.toDouble(),
-                          entry.value.value.toDouble(),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 50,
+                      interval: 100,
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        return Text(
+                          '${value.toInt()}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF757575),
+                          ),
                         );
-                      }).toList(),
-                      isCurved: true,
-                      color: AppColors.primaryGreen,
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) {
-                          final measurement = displayMeasurements[index];
-                          return FlDotCirclePainter(
-                            radius: 4,
-                            color: measurement.zoneColor,
-                            strokeWidth: 2,
-                            strokeColor: Colors.white,
-                          );
-                        },
-                      ),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: AppColors.primaryGreen.withOpacity(0.1),
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                  ),
+                ),
+                minX: 0,
+                maxX: (data.length - 1).toDouble(),
+                minY: 0,
+                maxY: 600,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: data.asMap().entries.map((e) {
+                      return FlSpot(e.key.toDouble(), e.value.value);
+                    }).toList(),
+                    isCurved: true,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                    ),
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: Colors.white,
+                          strokeWidth: 2,
+                          strokeColor: const Color(0xFF4CAF50),
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF4CAF50).withOpacity(0.3),
+                          const Color(0xFF4CAF50).withOpacity(0.0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
                     ),
-                  ],
-                  // Zone-Linien
-                  extraLinesData: ExtraLinesData(
-                    horizontalLines: [
-                      HorizontalLine(
-                        y: personalBest * 0.8,
-                        color: AppColors.greenZone.withOpacity(0.3),
-                        strokeWidth: 1,
-                        dashArray: [5, 5],
-                      ),
-                      HorizontalLine(
-                        y: personalBest * 0.5,
-                        color: AppColors.yellowZone.withOpacity(0.3),
-                        strokeWidth: 1,
-                        dashArray: [5, 5],
-                      ),
-                    ],
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    tooltipPadding: EdgeInsets.all(8), // Passen Sie den Innenabstand des Tooltips an
+                    tooltipBorderRadius: BorderRadius.circular(8), // Rundet die Ecken des Tooltips
+                    getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                      return touchedBarSpots.map((barSpot) {
+                        return LineTooltipItem(
+                          '${barSpot.y.toInt()} L/min',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        );
+                      }).toList();
+                    },
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-}*/
+}
+
+class PeakFlowData {
+  final String date;
+  final double value;
+
+  PeakFlowData({required this.date, required this.value});
+}

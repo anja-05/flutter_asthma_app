@@ -1,98 +1,139 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
 
 class SymptomIntensitySlider extends StatelessWidget {
-  final double value; // 1-10
-  final ValueChanged<double> onChanged;
+  final String symptomName;
+  final int intensity;
+  final ValueChanged<int> onChanged;
+  final IconData? icon;
 
   const SymptomIntensitySlider({
     Key? key,
-    required this.value,
+    required this.symptomName,
+    required this.intensity,
     required this.onChanged,
+    this.icon,
   }) : super(key: key);
 
-  Color _getColorForValue(double value) {
-    if (value <= 3) return AppColors.successGreen;
-    if (value <= 6) return AppColors.warningYellow;
-    return AppColors.emergencyRed;
+  Color _getColorForIntensity(int value) {
+    if (value <= 2) {
+      return const Color(0xFF4CAF50);
+    } else if (value <= 4) {
+      return const Color(0xFFFFC107);
+    } else {
+      return const Color(0xFFF44336);
+    }
   }
 
-  String _getLabelForValue(double value) {
-    if (value <= 3) return 'Leicht';
-    if (value <= 6) return 'Mittel';
-    return 'Schwer';
+  String _getIntensityLabel(int value) {
+    switch (value) {
+      case 1:
+        return 'Sehr leicht';
+      case 2:
+        return 'Leicht';
+      case 3:
+        return 'Mittel';
+      case 4:
+        return 'Stark';
+      case 5:
+        return 'Sehr stark';
+      default:
+        return 'Keine';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = _getColorForValue(value);
-    final label = _getLabelForValue(value);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Intensität',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '$label (${value.toInt()})',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: color,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 24,
+                  color: _getColorForIntensity(intensity),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Text(
+                  symptomName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF212121),
+                  ),
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _getColorForIntensity(intensity).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _getIntensityLabel(intensity),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _getColorForIntensity(intensity),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: _getColorForIntensity(intensity),
+              inactiveTrackColor:
+              _getColorForIntensity(intensity).withOpacity(0.2),
+              thumbColor: _getColorForIntensity(intensity),
+              overlayColor: _getColorForIntensity(intensity).withOpacity(0.2),
+              trackHeight: 6,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 10,
+              ),
             ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: color,
-            inactiveTrackColor: color.withOpacity(0.2),
-            thumbColor: color,
-            overlayColor: color.withOpacity(0.2),
-            trackHeight: 6,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+            child: Slider(
+              value: intensity.toDouble(),
+              min: 0,
+              max: 5,
+              divisions: 5,
+              onChanged: (value) => onChanged(value.toInt()),
+            ),
           ),
-          child: Slider(
-            value: value,
-            min: 1,
-            max: 10,
-            divisions: 9,
-            onChanged: onChanged,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(10, (index) {
+            children: List.generate(6, (index) {
               return Text(
-                '${index + 1}',
+                '$index',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textLight,
+                  color: intensity == index
+                      ? _getColorForIntensity(intensity)
+                      : const Color(0xFF9E9E9E),
+                  fontWeight:
+                  intensity == index ? FontWeight.bold : FontWeight.normal,
                 ),
               );
             }),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
