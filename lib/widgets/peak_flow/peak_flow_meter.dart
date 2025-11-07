@@ -8,11 +8,11 @@ class PeakFlowMeter extends StatelessWidget {
   final VoidCallback? onMeasure;
 
   const PeakFlowMeter({
-    Key? key,
+    super.key,
     required this.currentValue,
     required this.personalBest,
     this.onMeasure,
-  }) : super(key: key);
+  });
 
   PeakFlowZone _getZone() {
     final percentage = (currentValue / personalBest) * 100;

@@ -11,7 +11,7 @@ class VitalValueCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const VitalValueCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.value,
     required this.unit,
@@ -19,7 +19,7 @@ class VitalValueCard extends StatelessWidget {
     this.color = const Color(0xFF4CAF50),
     this.status,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

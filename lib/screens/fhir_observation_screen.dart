@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class FhirObservationScreen extends StatelessWidget {
-  const FhirObservationScreen({Key? key}) : super(key: key);
+  const FhirObservationScreen({super.key});
 
   Future<void> createObservation() async {
     final url = Uri.parse('https://hapi.fhir.org/baseR5/Observation');

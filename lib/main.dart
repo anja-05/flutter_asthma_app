@@ -16,7 +16,7 @@ void main() async {
 }
 
 class AsthmaApp extends StatelessWidget {
-  const AsthmaApp({Key? key}) : super(key: key);
+  const AsthmaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,15 +45,15 @@ class AsthmaApp extends StatelessWidget {
           ),
         ),
       ),
-     // home: const AuthWrapper(),
-      home: FhirObservationScreen(),
+      home: const AuthWrapper(),
+      //home: FhirObservationScreen(),
     );
   }
 }
 
 // AuthWrapper prüft ob User eingeloggt ist
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {

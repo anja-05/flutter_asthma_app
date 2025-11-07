@@ -7,12 +7,12 @@ class SymptomIntensitySlider extends StatelessWidget {
   final IconData? icon;
 
   const SymptomIntensitySlider({
-    Key? key,
+    super.key,
     required this.symptomName,
     required this.intensity,
     required this.onChanged,
     this.icon,
-  }) : super(key: key);
+  });
 
   Color _getColorForIntensity(int value) {
     if (value <= 2) {

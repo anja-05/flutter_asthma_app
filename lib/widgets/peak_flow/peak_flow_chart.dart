@@ -7,10 +7,10 @@ class PeakFlowChart extends StatelessWidget {
   final double personalBest;
 
   const PeakFlowChart({
-    Key? key,
+    super.key,
     required this.data,
     required this.personalBest,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

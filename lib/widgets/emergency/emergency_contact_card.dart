@@ -9,13 +9,13 @@ class EmergencyContactCard extends StatelessWidget {
   final VoidCallback? onEdit;
 
   const EmergencyContactCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.relationship,
     required this.phoneNumber,
     this.onCall,
     this.onEdit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
