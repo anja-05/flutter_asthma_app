@@ -9,13 +9,13 @@ class AqiCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const AqiCard({
-    Key? key,
+    super.key,
     required this.aqiValue,
     required this.location,
     required this.category,
     this.recommendation,
     this.onTap,
-  }) : super(key: key);
+  });
 
   Color _getAqiColor() {
     if (aqiValue <= 50) {

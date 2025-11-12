@@ -4,6 +4,7 @@ import 'constants/app_colors.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/fhir_observation_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +16,7 @@ void main() async {
 }
 
 class AsthmaApp extends StatelessWidget {
-  const AsthmaApp({Key? key}) : super(key: key);
+  const AsthmaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +46,14 @@ class AsthmaApp extends StatelessWidget {
         ),
       ),
       home: const AuthWrapper(),
+      //home: FhirObservationScreen(),
     );
   }
 }
 
 // AuthWrapper prüft ob User eingeloggt ist
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {

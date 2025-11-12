@@ -14,7 +14,7 @@ class MedicationCard extends StatelessWidget {
   final VoidCallback? onEdit;
 
   const MedicationCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.dosage,
     required this.type,
@@ -25,7 +25,7 @@ class MedicationCard extends StatelessWidget {
     this.takenToday = false,
     this.onTaken,
     this.onEdit,
-  }) : super(key: key);
+  });
 
   IconData _getIconForType(String type) {
     switch (type.toLowerCase()) {

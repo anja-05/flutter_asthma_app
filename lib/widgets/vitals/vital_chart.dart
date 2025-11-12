@@ -11,14 +11,14 @@ class VitalChart extends StatelessWidget {
   final double? maxY;
 
   const VitalChart({
-    Key? key,
+    super.key,
     required this.title,
     required this.data,
     required this.unit,
     this.color = const Color(0xFF4CAF50),
     this.minY,
     this.maxY,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

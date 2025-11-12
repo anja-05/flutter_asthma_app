@@ -7,11 +7,11 @@ class PollenCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const PollenCard({
-    Key? key,
+    super.key,
     required this.pollenLevels,
     required this.location,
     this.onTap,
-  }) : super(key: key);
+  });
 
   Color _getLevelColor(int level) {
     switch (level) {
@@ -194,7 +194,7 @@ class PollenCard extends StatelessWidget {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

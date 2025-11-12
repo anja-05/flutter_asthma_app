@@ -7,10 +7,10 @@ class ZoneIndicator extends StatelessWidget {
   final bool showLabels;
 
   const ZoneIndicator({
-    Key? key,
+    super.key,
     required this.zone,
     this.showLabels = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -10,13 +10,13 @@ class WarningBanner extends StatelessWidget {
   final VoidCallback? onTap;
 
   const WarningBanner({
-    Key? key,
+    super.key,
     required this.title,
     required this.message,
     this.severity = WarningSeverity.info,
     this.onDismiss,
     this.onTap,
-  }) : super(key: key);
+  });
 
   Color _getBackgroundColor() {
     switch (severity) {

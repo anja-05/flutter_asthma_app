@@ -9,13 +9,13 @@ class SymptomHistoryCard extends StatelessWidget {
   final String? trigger;
 
   const SymptomHistoryCard({
-    Key? key,
+    super.key,
     required this.date,
     required this.time,
     required this.symptoms,
     this.notes,
     this.trigger,
-  }) : super(key: key);
+  });
 
   IconData _getSymptomIcon(String symptom) {
     switch (symptom.toLowerCase()) {
@@ -134,7 +134,7 @@ class SymptomHistoryCard extends StatelessWidget {
                 ],
               ),
             );
-          }).toList(),
+          }),
           if (trigger != null) ...[
             const SizedBox(height: 12),
             Container(

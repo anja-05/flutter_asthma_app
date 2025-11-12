@@ -8,13 +8,13 @@ class ScreenHeader extends StatelessWidget {
   final bool showBackButton;
 
   const ScreenHeader({
-    Key? key,
+    super.key,
     required this.title,
     this.subtitle,
     this.icon,
     this.actions,
     this.showBackButton = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
