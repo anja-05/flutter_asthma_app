@@ -1,15 +1,27 @@
+import 'package:Asthma_Assist/screens/emergency_plan_screen.dart';
+import 'package:Asthma_Assist/screens/medictaion_plan_screen.dart';
+import 'package:Asthma_Assist/screens/peak_flow_screen.dart';
+import 'package:Asthma_Assist/screens/warnings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
 import 'constants/app_colors.dart';
 import 'services/auth_service.dart';
+
+// Screens
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/vital_data_screen.dart';
+import 'screens/symptom_diary_screen.dart';
 import 'screens/fhir_observation_screen.dart';
+// Falls du später mehr Screens hast:
+// import 'screens/emergency_screen.dart';
+// import 'screens/medication_screen.dart';
+// import 'screens/peakflow_screen.dart';
+// import 'screens/warning_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialisiere deutsche Lokalisierung
   await initializeDateFormatting('de_DE', null);
 
   runApp(const AsthmaApp());
@@ -23,35 +35,34 @@ class AsthmaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Asthma App',
       debugShowCheckedModeBanner: false,
+
       theme: ThemeData(
         primaryColor: AppColors.primaryGreen,
         scaffoldBackgroundColor: AppColors.backgroundColor,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primaryGreen,
-        ),
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryGreen,
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 16,
-            color: AppColors.textPrimary,
-          ),
-          bodyMedium: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primaryGreen),
       ),
+
+      // ⬇️ ALLE ROUTES DEINER APP ⬇️
+      routes: {
+        '/dashboard': (context) => const DashboardScreen(),
+        '/login': (context) => const LoginScreen(),
+
+        // fertige Screens
+        '/symptoms': (context) => const SymptomDiaryScreen(),
+        '/vitals': (context) => const VitalScreen(),
+        '/emergency': (context) => const EmergencyPlanScreen(),
+        '/peakflow': (context) => const PeakFlowScreen(),
+        '/medication': (context) => const MedicationScreen(),
+        '/warnings': (context) => const WarningScreen(),
+      },
+
+      // App startet in Login/Dashboard je nach Auth
       home: const AuthWrapper(),
-      //home: FhirObservationScreen(),
     );
   }
 }
 
-// AuthWrapper prüft ob User eingeloggt ist
+/// Prüft ob User eingeloggt ist
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
@@ -60,18 +71,14 @@ class AuthWrapper extends StatelessWidget {
     return FutureBuilder<bool>(
       future: AuthService().isLoggedIn(),
       builder: (context, snapshot) {
+        // Ladezustand
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            backgroundColor: AppColors.backgroundColor,
-            body: Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryGreen,
-              ),
-            ),
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // Wenn eingeloggt: Dashboard, sonst: Login
+        // Navigation abhängig vom Login
         if (snapshot.data == true) {
           return const DashboardScreen();
         } else {
