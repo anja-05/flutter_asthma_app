@@ -28,7 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  fitbitter: ^0.0.4
+  fitbitter: ^2.0.6
   flutter:
     sdk: flutter
 
@@ -96,3 +96,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
