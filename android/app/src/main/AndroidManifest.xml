@@ -33,8 +33,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme=
-                    android:host="fitbit-auth"/>
+                    android:scheme="asthmaassist"  <!-- das Schema -->
+                    android:host="fitbit-auth"/> <!-- der Hostteil der URL -->
             </intent-filter>
         </activity>
 
