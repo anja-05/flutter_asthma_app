@@ -74,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _connectFitbit() async {
     try {
       FitbitCredentials? fitbitCredentials = await FitbitConnector.authorize(
-        clientID: '23TQ8M ',
+        clientID: '23TQ8M',
         clientSecret: 'b6c85177c8b0c82babec097bc6c47141',
         redirectUri: 'asthmaassist://fitbit-auth',
         callbackUrlScheme: 'asthmaassist',
@@ -84,11 +84,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
         print("Fitbit-Login erfolgreich!");
         print("UserID: ${fitbitCredentials.userID}");
         print("Token: ${fitbitCredentials.fitbitAccessToken}");
+
+        // Herzfrequenz abrufen
+        _getHeartRate(fitbitCredentials);
       }
     } catch (e) {
       print("Fehler bei Fitbit-Authentifizierung: $e");
     }
   }
+
+
+  // HERZFREQUENZ ABRUFEN
+  Future<void> _getHeartRate(FitbitCredentials fitbitCredentials) async {
+    try {
+      // Manager für Heart Rate erstellen
+      FitbitHeartRateDataManager heartManager = FitbitHeartRateDataManager(
+        clientID: '23TQ8M',
+        clientSecret: 'b6c85177c8b0c82babec097bc6c47141',
+      );
+
+      // URL-Objekt für die Abfrage (Herzfrequenz eines Tages)
+      FitbitHeartRateAPIURL heartRateUrl = FitbitHeartRateAPIURL.day(
+        date: DateTime.now().subtract(const Duration(days: 1)),
+        fitbitCredentials: fitbitCredentials,
+      );
+
+      // Daten abrufen
+      List<FitbitHeartRateData> heartData =
+      await heartManager.fetch(heartRateUrl);
+
+      if (heartData.isEmpty) {
+        print("Keine Herzfrequenzdaten gefunden.");
+        return;
+      }
+
+      print("Herzfrequenzdaten (gestern):");
+      for (var entry in heartData) {
+        // Die Datenklasse enthält z.B. dateOfMonitoring und restingHeartRate / Zonen
+        print(
+            "Datum: ${entry.dateOfMonitoring} ➝ Ruhepuls: ${entry.restingHeartRate} bpm");
+      }
+    } catch (e) {
+      print("Fehler beim Abrufen der Herzfrequenz: $e");
+    }
+  }
+
 
 
   void _navigateToScreen(String name) {
