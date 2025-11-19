@@ -74,19 +74,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _connectFitbit() async {
     try {
       FitbitCredentials? fitbitCredentials = await FitbitConnector.authorize(
-        clientID: 'HIER-DEINE-CLIENT-ID',
-        clientSecret: 'HIER-DEIN-CLIENT-SECRET',
+        clientID: '23TQ8M ',
+        clientSecret: 'b6c85177c8b0c82babec097bc6c47141',
         redirectUri: 'asthmaassist://fitbit-auth',
         callbackUrlScheme: 'asthmaassist',
       );
 
       if (fitbitCredentials != null) {
-        print("Fitbit Login erfolgreich!");
+        print("Fitbit-Login erfolgreich!");
         print("UserID: ${fitbitCredentials.userID}");
         print("Token: ${fitbitCredentials.fitbitAccessToken}");
       }
     } catch (e) {
-      print("Fehler bei Fitbit Authentifizierung: $e");
+      print("Fehler bei Fitbit-Authentifizierung: $e");
     }
   }
 
