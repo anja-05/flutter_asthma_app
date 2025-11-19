@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../common/app_card.dart';
+import '../common/app_card.dart'; // Passe den Pfad ggf. an
 
 class VitalChart extends StatelessWidget {
   final String title;
-  final List<VitalData> data;
+  final List<VitalChartData> data;
   final String unit;
   final Color color;
   final double? minY;
@@ -44,29 +44,22 @@ class VitalChart extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey.withOpacity(0.2),
-                      strokeWidth: 1,
-                    );
-                  },
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withOpacity(0.2),
+                    strokeWidth: 1,
+                  ),
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
                       interval: 1,
                       getTitlesWidget: (double value, TitleMeta meta) {
-                        if (value.toInt() >= 0 &&
-                            value.toInt() < data.length) {
+                        if (value.toInt() >= 0 && value.toInt() < data.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
@@ -86,23 +79,19 @@ class VitalChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        return Text(
-                          '${value.toInt()}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF757575),
-                          ),
-                        );
-                      },
+                      getTitlesWidget: (double value, TitleMeta meta) => Text(
+                        '${value.toInt()}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF757575),
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: Border.all(
-                    color: Colors.grey.withOpacity(0.2),
-                  ),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
                 ),
                 minX: 0,
                 maxX: (data.length - 1).toDouble(),
@@ -145,16 +134,13 @@ class VitalChart extends StatelessWidget {
                   touchTooltipData: LineTouchTooltipData(
                     tooltipPadding: const EdgeInsets.all(8),
                     tooltipBorderRadius: BorderRadius.circular(8),
-                    tooltipBorder: BorderSide(
-                      color: color,
-                      width: 2,
-                    ),
+                    tooltipBorder: BorderSide(color: color, width: 2),
                     getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                       return touchedBarSpots.map((barSpot) {
                         return LineTooltipItem(
-                          '${barSpot.y.toInt()} $unit', // Tooltip-Text mit dem Wert und der Einheit
+                          '${barSpot.y.toInt()} $unit',
                           const TextStyle(
-                            color: Colors.white, // Textfarbe innerhalb des Tooltips
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -172,9 +158,9 @@ class VitalChart extends StatelessWidget {
   }
 }
 
-class VitalData {
+class VitalChartData {
   final String time;
   final double value;
 
-  VitalData({required this.time, required this.value});
+  VitalChartData({required this.time, required this.value});
 }

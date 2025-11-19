@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
 import '../constants/app_colors.dart';
 import '../widgets/dashboard/dashboard_card.dart';
+import '../widgets/dashboard/greeting_header.dart';
+import '../widgets/common/bottom_navigation.dart';
+
 import '../services/auth_service.dart';
 import '../models/user.dart';
 import 'login_screen.dart';
@@ -34,21 +38,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  String _getCurrentDate() {
-    final now = DateTime.now();
-    final formatter = DateFormat('EEEE, d. MMMM yyyy', 'de_DE');
-    return formatter.format(now);
-  }
-
-  void _navigateToScreen(String screenName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Navigation zu: $screenName'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
-
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -57,11 +46,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         content: const Text('Möchten Sie sich wirklich abmelden?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Abbrechen'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Abmelden'),
           ),
         ],
@@ -70,31 +59,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (confirm == true) {
       await _authService.logout();
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
-      }
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
     }
   }
+
+  void _navigateToScreen(String name) {
+    switch (name) {
+      case 'Symptomtagebuch':
+        Navigator.pushNamed(context, '/symptoms');
+        break;
+
+      case 'Peak-Flow':
+        Navigator.pushNamed(context, '/peakflow'); // Falls du später hast
+        break;
+
+      case 'Medikationsplan':
+        Navigator.pushNamed(context, '/medication'); // optional
+        break;
+
+      case 'Warnungen':
+        Navigator.pushNamed(context, '/warnings'); // optional
+        break;
+
+      case 'Notfall':
+        Navigator.pushNamed(context, '/emergency'); // optional
+        break;
+
+      case 'Vitaldaten':
+        Navigator.pushNamed(context, '/vitals');
+        break;
+
+      default:
+        debugPrint("Keine Route für: $name");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppColors.backgroundColor,
         body: Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primaryGreen,
-          ),
+          child: CircularProgressIndicator(color: AppColors.primaryGreen),
         ),
       );
     }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
+
+      /// >>> BOTTOM NAVIGATION HINZUGEFÜGT <<<
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 0,
+        onTap: (index) {
+          // Kann später zu Screens navigieren
+        },
+      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -102,122 +129,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header mit Logout Button
+                /// >>> GREETING HEADER HINZUGEFÜGT <<<
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Begrüßung mit dynamischem Namen
-                          Text(
-                            'Hallo, ${_currentUser?.displayName ?? "Gast"}!',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryGreen,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-
-                          // Datum mit Emoji
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  _getCurrentDate(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Color(0xFF757575),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Text(
-                                '☀️',
-                                style: TextStyle(fontSize: 24),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    GreetingHeader(
+                      userName: _currentUser?.displayName ?? "Gast",
                     ),
-
-                    // Logout Button
                     IconButton(
                       icon: const Icon(Icons.logout),
                       color: AppColors.primaryGreen,
                       onPressed: _handleLogout,
-                      tooltip: 'Abmelden',
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 24),
 
-                // Info Cards
                 DashboardCard(
                   title: 'Symptomtagebuch',
                   icon: Icons.book,
-                  iconColor: const Color(0xFF81C784),
+                  iconColor: AppColors.lightGreen,
                   backgroundColor: AppColors.symptomCardBg,
                   content: 'Letzter Eintrag: 20.10.2025\nTrend: Weniger Anfälle',
                   onTap: () => _navigateToScreen('Symptomtagebuch'),
                 ),
-
                 const SizedBox(height: 16),
 
                 DashboardCard(
                   title: 'Peak-Flow',
                   icon: Icons.show_chart,
-                  iconColor: const Color(0xFF66BB6A),
+                  iconColor: AppColors.mediumGreen,
                   backgroundColor: AppColors.peakFlowCardBg,
                   content: 'Letzte Messung: 350 l/min\nIm grünen Bereich',
                   onTap: () => _navigateToScreen('Peak-Flow'),
                 ),
-
                 const SizedBox(height: 16),
 
                 DashboardCard(
                   title: 'Medikationsplan',
                   icon: Icons.medication,
-                  iconColor: const Color(0xFF388E3C),
+                  iconColor: AppColors.primaryGreen,
                   backgroundColor: AppColors.medicationCardBg,
                   content: 'Nächstes Medikament: 18:00 Uhr\nKeine Doppeldosierung',
                   onTap: () => _navigateToScreen('Medikationsplan'),
                 ),
-
                 const SizedBox(height: 16),
 
                 DashboardCard(
                   title: 'Warnungen',
                   icon: Icons.warning_amber,
-                  iconColor: const Color(0xFF43A047),
+                  iconColor: AppColors.darkGreen,
                   backgroundColor: AppColors.warningCardBg,
                   content: 'Pollen: Hoch\nLuftqualität: Gut',
                   onTap: () => _navigateToScreen('Warnungen'),
                 ),
-
                 const SizedBox(height: 16),
 
                 DashboardCard(
                   title: 'Notfall',
                   icon: Icons.phone,
-                  iconColor: const Color(0xFFD32F2F),
+                  iconColor: AppColors.emergencyRed,
                   backgroundColor: AppColors.emergencyCardBg,
                   content: 'Notfallplan bereit\nSOS-Button verfügbar',
                   onTap: () => _navigateToScreen('Notfall'),
                 ),
-
                 const SizedBox(height: 16),
 
                 DashboardCard(
                   title: 'Vitaldaten',
                   icon: Icons.favorite,
-                  iconColor: const Color(0xFF26A69A),
+                  iconColor: AppColors.tealAccent,
                   backgroundColor: AppColors.vitalCardBg,
-                  content: 'Puls: 72 bpm\nSauerstoff: 98%\nAtemfrequenz: 14/min',
+                  content:
+                  'Puls: 72 bpm\nSauerstoff: 98%\nAtemfrequenz: 14/min',
                   onTap: () => _navigateToScreen('Vitaldaten'),
                 ),
               ],
