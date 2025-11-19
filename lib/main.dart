@@ -20,6 +20,11 @@ import 'screens/fhir_observation_screen.dart';
 // import 'screens/peakflow_screen.dart';
 // import 'screens/warning_screen.dart';
 
+// Fitbit App authentifizieren
+import 'package:flutter/material.dart';
+import 'package:fitbitter/fitbitter.dart';  // Importiert das fitbitter-Paket
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('de_DE', null);
@@ -42,7 +47,7 @@ class AsthmaApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primaryGreen),
       ),
 
-      // ⬇️ ALLE ROUTES DEINER APP ⬇️
+      // ALLE ROUTES DER APP
       routes: {
         '/dashboard': (context) => const DashboardScreen(),
         '/login': (context) => const LoginScreen(),

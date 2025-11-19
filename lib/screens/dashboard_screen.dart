@@ -10,6 +10,8 @@ import '../widgets/common/bottom_navigation.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
 import 'login_screen.dart';
+import 'package:fitbitter/fitbitter.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -67,6 +69,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
   }
+
+  // FITBIT AUTH-FUNKTION
+  Future<void> _connectFitbit() async {
+    try {
+      FitbitCredentials? fitbitCredentials = await FitbitConnector.authorize(
+        clientID: 'HIER-DEINE-CLIENT-ID',
+        clientSecret: 'HIER-DEIN-CLIENT-SECRET',
+        redirectUri: 'asthmaassist://fitbit-auth',
+        callbackUrlScheme: 'asthmaassist',
+      );
+
+      if (fitbitCredentials != null) {
+        print("Fitbit Login erfolgreich!");
+        print("UserID: ${fitbitCredentials.userID}");
+        print("Token: ${fitbitCredentials.fitbitAccessToken}");
+      }
+    } catch (e) {
+      print("Fehler bei Fitbit Authentifizierung: $e");
+    }
+  }
+
 
   void _navigateToScreen(String name) {
     switch (name) {
@@ -204,6 +227,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   content:
                   'Puls: 72 bpm\nSauerstoff: 98%\nAtemfrequenz: 14/min',
                   onTap: () => _navigateToScreen('Vitaldaten'),
+                ),
+
+                //FITBIT BUTTON
+                const SizedBox(height: 16),
+
+                ElevatedButton.icon(
+                  onPressed: _connectFitbit,
+                  icon: const Icon(Icons.watch),
+                  label: const Text("Mit Fitbit verbinden"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  ),
                 ),
               ],
             ),
