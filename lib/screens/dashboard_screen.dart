@@ -1,3 +1,4 @@
+import 'package:fitbitter/fitbitter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,7 +11,6 @@ import '../widgets/common/bottom_navigation.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
 import 'login_screen.dart';
-import 'package:fitbitter/fitbitter.dart';
 
 
 class DashboardScreen extends StatefulWidget {
@@ -98,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _getHeartRate(FitbitCredentials fitbitCredentials) async {
     try {
       // Manager für Heart Rate erstellen
-      FitbitHeartRateDataManager heartManager = FitbitHeartRateDataManager(
+      FitbitHeartDataManager heartManager = FitbitHeartDataManager(
         clientID: '23TQ8M',
         clientSecret: 'b6c85177c8b0c82babec097bc6c47141',
       );
@@ -110,8 +110,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       // Daten abrufen
-      List<FitbitHeartRateData> heartData =
+      List<FitbitData> fitbitData =
       await heartManager.fetch(heartRateUrl);
+
+      List<FitbitHeartRateData> heartData =
+      fitbitData.map((data) => data as FitbitHeartRateData).toList();
 
       if (heartData.isEmpty) {
         print("Keine Herzfrequenzdaten gefunden.");

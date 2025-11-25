@@ -1,5 +1,5 @@
 import 'package:Asthma_Assist/screens/emergency_plan_screen.dart';
-import 'package:Asthma_Assist/screens/medictaion_plan_screen.dart';
+import 'package:Asthma_Assist/screens/medication_plan_screen.dart';
 import 'package:Asthma_Assist/screens/peak_flow_screen.dart';
 import 'package:Asthma_Assist/screens/warnings_screen.dart';
 import 'package:flutter/material.dart';
