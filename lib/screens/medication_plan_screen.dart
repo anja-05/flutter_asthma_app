@@ -116,7 +116,7 @@ class _MedicationScreenState extends State<MedicationScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime(2025, 10, 22)),
+              DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now()),
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
