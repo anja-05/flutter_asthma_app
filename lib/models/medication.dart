@@ -1,3 +1,8 @@
+// lib/models/medication.dart
+import 'package:uuid/uuid.dart';
+
+const Uuid uuid = Uuid();
+
 class Medication {
   final String id;
   final String name;
@@ -12,6 +17,24 @@ class Medication {
     required this.type,
     required this.times,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'dosage': dosage,
+    'type': type,
+    'times': times,
+  };
+
+  factory Medication.fromJson(Map<String, dynamic> json) {
+    return Medication(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      dosage: json['dosage'] as String,
+      type: json['type'] as String,
+      times: List<String>.from(json['times'] as List),
+    );
+  }
 }
 
 class MedicationIntake {
@@ -41,6 +64,26 @@ class MedicationIntake {
       taken: true,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'dosage': dosage,
+    'time': time,
+    'type': type,
+    'taken': taken,
+  };
+
+  factory MedicationIntake.fromJson(Map<String, dynamic> json) {
+    return MedicationIntake(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      dosage: json['dosage'] as String,
+      time: json['time'] as String,
+      type: json['type'] as String,
+      taken: json['taken'] as bool,
+    );
+  }
 }
 
 class PastMedicationIntake {
@@ -57,4 +100,22 @@ class PastMedicationIntake {
     required this.type,
     required this.dateTime,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'dosage': dosage,
+    'type': type,
+    'dateTime': dateTime.toIso8601String(), // Speichere Datum als String
+  };
+
+  factory PastMedicationIntake.fromJson(Map<String, dynamic> json) {
+    return PastMedicationIntake(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      dosage: json['dosage'] as String,
+      type: json['type'] as String,
+      dateTime: DateTime.parse(json['dateTime'] as String),
+    );
+  }
 }

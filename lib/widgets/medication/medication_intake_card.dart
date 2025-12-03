@@ -1,3 +1,4 @@
+// lib/widgets/medication/medication_intake_card.dart
 import 'package:flutter/material.dart';
 import '../../models/medication.dart';
 import '../common/app_card.dart';
@@ -7,12 +8,14 @@ class MedicationIntakeCard extends StatelessWidget {
   final MedicationIntake intake;
   final VoidCallback onMarkAsTaken;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete; // NEU: Callback für Löschen
 
   const MedicationIntakeCard({
     Key? key,
     required this.intake,
     required this.onMarkAsTaken,
     this.onTap,
+    this.onDelete, // NEU
   }) : super(key: key);
 
   @override
@@ -20,7 +23,7 @@ class MedicationIntakeCard extends StatelessWidget {
     final taken = intake.taken;
 
     return AppCard(
-      backgroundColor: AppColors.medicationCardBg,   // hellgrün passend
+      backgroundColor: AppColors.medicationCardBg,
       onTap: onTap,
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -34,7 +37,7 @@ class MedicationIntakeCard extends StatelessWidget {
               color: AppColors.lightGreen.withOpacity(0.25),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.medication,
               size: 22,
               color: AppColors.primaryGreen,
@@ -65,37 +68,56 @@ class MedicationIntakeCard extends StatelessWidget {
                   ),
                 ),
                 Row(
-                  children: const [
-                    Icon(Icons.schedule,
+                  children: [
+                    const Icon(Icons.schedule,
                         size: 16, color: AppColors.textSecondary),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
+                    Text(
+                      intake.time,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ],
-                ),
-                Text(
-                  intake.time,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
                 ),
               ],
             ),
           ),
 
-          // STATUS ICON RECHTS
-          taken
-              ? const Icon(
-            Icons.check_circle,
-            color: AppColors.primaryGreen,
-            size: 26,
-          )
-              : GestureDetector(
-            onTap: onMarkAsTaken,
-            child: const Icon(
-              Icons.schedule,
-              color: AppColors.textSecondary,
-              size: 26,
-            ),
+          // STATUS ICON & LÖSCHEN-ICON RECHTS
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // 1. LÖSCHEN ICON
+              if (onDelete != null)
+                GestureDetector(
+                  onTap: onDelete,
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                    size: 26,
+                  ),
+                ),
+              const SizedBox(height: 10),
+
+              // 2. STATUS ICON
+              taken
+                  ? const Icon(
+                Icons.check_circle,
+                color: AppColors.primaryGreen,
+                size: 26,
+              )
+                  : GestureDetector(
+                onTap: onMarkAsTaken,
+                child: const Icon(
+                  Icons.schedule,
+                  color: AppColors.textSecondary,
+                  size: 26,
+                ),
+              ),
+            ],
           ),
         ],
       ),
