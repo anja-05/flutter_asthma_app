@@ -5,12 +5,14 @@ class EmergencyContactList extends StatelessWidget {
   final List<EmergencyContact> contacts;
   final Function(EmergencyContact)? onCall;
   final VoidCallback? onAdd;
+  final Function(EmergencyContact)? onDelete;
 
   const EmergencyContactList({
     Key? key,
     required this.contacts,
     this.onCall,
     this.onAdd,
+    this.onDelete,
   }) : super(key: key);
 
   @override
@@ -177,6 +179,15 @@ class EmergencyContactList extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                if (onDelete != null) {
+                  onDelete!(contact);
+                }
+              },
             ),
           ],
         ),

@@ -1,36 +1,152 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../services/phone_service.dart';
 import '../widgets/emergency/emergency_checklist_card.dart';
 import '../widgets/emergency/emergency_contact_list.dart';
 import '../widgets/common/info_card.dart';
 import '../widgets/emergency/floating_sos_button.dart';
 import '../constants/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
-class EmergencyPlanScreen extends StatelessWidget {
+class EmergencyPlanScreen extends StatefulWidget {
   const EmergencyPlanScreen({Key? key}) : super(key: key);
 
+  @override
+  State<EmergencyPlanScreen> createState() => _EmergencyPlanScreenState();
+}
+
+class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
+  final List<EmergencyContact> contacts = [];
+
+  // ---------------------------------------------------
+  // 🔹 Kontakte beim App-Start laden
+  // ---------------------------------------------------
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  // ---------------------------------------------------
+  // 🔹 Kontakte aus SharedPreferences laden
+  // ---------------------------------------------------
+  void _loadContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString('contacts');
+
+    if (jsonString != null) {
+      final List decoded = json.decode(jsonString);
+
+      setState(() {
+        contacts.clear();
+        contacts.addAll(decoded.map((c) => EmergencyContact(
+          id: c['id'],
+          name: c['name'],
+          phoneNumber: c['phoneNumber'],
+          relationship: c['relationship'],
+          isPrimary: c['isPrimary'],
+        )));
+      });
+    }
+  }
+
+  // ---------------------------------------------------
+  // 🔹 Kontakte speichern
+  // ---------------------------------------------------
+  void _saveContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final List mapList = contacts.map((c) => {
+      'id': c.id,
+      'name': c.name,
+      'phoneNumber': c.phoneNumber,
+      'relationship': c.relationship,
+      'isPrimary': c.isPrimary,
+    }).toList();
+
+    prefs.setString('contacts', json.encode(mapList));
+  }
+
+  // ---------------------------------------------------
+  // 🔹 Dialog zum Kontakt hinzufügen
+  // ---------------------------------------------------
+  void _showAddContactDialog() {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Neuen Kontakt hinzufügen"),
+        content: SizedBox(
+          height: 150,
+          child: Column(
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: "Name"),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: "Telefonnummer"),
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Abbrechen"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final phone = phoneController.text.trim();
+
+              if (name.isEmpty || phone.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Bitte beide Felder ausfüllen."),
+                  ),
+                );
+                return;
+              }
+
+              setState(() {
+                contacts.add(
+                  EmergencyContact(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    name: name,
+                    phoneNumber: phone,
+                    relationship: "Kontaktperson",
+                    isPrimary: contacts.isEmpty,
+                  ),
+                );
+              });
+
+              _saveContacts(); // 🔹 speichern nach hinzufügen
+              Navigator.pop(context);
+            },
+            child: const Text("Hinzufügen"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------
+  // 🔹 Oberfläche
+  // ---------------------------------------------------
   @override
   Widget build(BuildContext context) {
     final List<EmergencyStep> emergencySteps = [
       EmergencyStep(text: 'Ruhe bewahren und aufrecht hinsetzen'),
-      EmergencyStep(text: 'Schnellwirkendes Medikament (z. B. Inhalator) anwenden'),
+      EmergencyStep(text: 'Schnellwirkendes Medikament (z. B. Inhalator) anwenden'),
       EmergencyStep(text: 'Peak-Flow messen'),
       EmergencyStep(text: 'Wenn keine Besserung: Notruf oder Kontaktperson verständigen'),
-    ];
-
-    final List<EmergencyContact> contacts = [
-      EmergencyContact(
-        id: '1',
-        name: 'Anna Müller',
-        phoneNumber: '0151 2345678',
-        relationship: 'Kontaktperson',
-        isPrimary: true,
-      ),
-    ];
-
-    final List<String> importantHints = [
-      'Bei akuter Atemnot sofort Notarzt rufen',
-      'Notfallmedikation immer griffbereit haben',
-      'Im Zweifel lieber einmal zu viel als zu wenig Hilfe holen',
     ];
 
     return Scaffold(
@@ -41,7 +157,6 @@ class EmergencyPlanScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Text(
                 'Notfallplan',
                 style: TextStyle(
@@ -50,6 +165,7 @@ class EmergencyPlanScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 8),
               const Text(
                 'Im Notfall schnell handeln – dein persönlicher Plan und SOS-Kontakte.',
@@ -58,43 +174,47 @@ class EmergencyPlanScreen extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
+
               const SizedBox(height: 8),
+
               Row(
-                children: const [
+                children: [
                   Text(
-                    'Donnerstag, 23. Oktober 2025',
-                    style: TextStyle(
+                    DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
+                        .format(DateTime.now()),
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(width: 6),
-                  Icon(Icons.wb_sunny, color: Colors.orangeAccent, size: 18),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.wb_sunny, color: Colors.orangeAccent, size: 18),
                 ],
               ),
+
               const SizedBox(height: 24),
 
-              // Emergency Steps
               EmergencyChecklistCard(steps: emergencySteps),
+
               const SizedBox(height: 24),
 
-              // Contact List with 112 + contact
+              // 🔹 Kontaktliste MIT löschen
               EmergencyContactList(
                 contacts: contacts,
                 onCall: (contact) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Rufe ${contact.name} an...')),
-                  );
+                  PhoneService.call(contact.phoneNumber);
                 },
-                onAdd: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Neuen Kontakt hinzufügen...')),
-                  );
+                onAdd: _showAddContactDialog,
+                onDelete: (contact) {
+                  setState(() {
+                    contacts.removeWhere((c) => c.id == contact.id);
+                  });
+                  _saveContacts(); // 🔹 speichern nach löschen
                 },
               ),
+
               const SizedBox(height: 24),
 
-              // Important Tips
               const InfoCard(
                 title: 'Wichtige Hinweise',
                 items: [
@@ -111,7 +231,6 @@ class EmergencyPlanScreen extends StatelessWidget {
         ),
       ),
 
-      // Floating SOS Button
       bottomNavigationBar: FloatingSOSButton(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(

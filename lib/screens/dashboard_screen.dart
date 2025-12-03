@@ -105,13 +105,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       // URL-Objekt für die Abfrage (Herzfrequenz eines Tages)
       FitbitHeartRateAPIURL heartRateUrl = FitbitHeartRateAPIURL.day(
-        date: DateTime.now().subtract(const Duration(days: 1)),
+        date: DateTime.now(),
         fitbitCredentials: fitbitCredentials,
       );
+      //FitbitHeartRateAPIURL heartRateUrl = FitbitHeartRateAPIURL.day(fitbitCredentials: fitbitCredentials, date: DateTime.now());
 
       // Daten abrufen
       List<FitbitData> fitbitData =
       await heartManager.fetch(heartRateUrl);
+
+      if (fitbitData == null || fitbitData.isEmpty) {
+        print("Keine Daten von Fitbit erhalten.");
+        return;
+      }
 
       List<FitbitHeartRateData> heartData =
       fitbitData.map((data) => data as FitbitHeartRateData).toList();
@@ -121,17 +127,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return;
       }
 
-      print("Herzfrequenzdaten (gestern):");
+      print("Herzfrequenzdaten:");
       for (var entry in heartData) {
-        // Die Datenklasse enthält z.B. dateOfMonitoring und restingHeartRate / Zonen
+        final restingHR = entry.restingHeartRate?.toString() ?? 'N/A';
         print(
-            "Datum: ${entry.dateOfMonitoring} ➝ Ruhepuls: ${entry.restingHeartRate} bpm");
+            "Datum: ${entry.dateOfMonitoring} ➝ Ruhepuls: $restingHR bpm");
       }
     } catch (e) {
       print("Fehler beim Abrufen der Herzfrequenz: $e");
     }
   }
-
 
 
   void _navigateToScreen(String name) {
@@ -141,19 +146,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         break;
 
       case 'Peak-Flow':
-        Navigator.pushNamed(context, '/peakflow'); // Falls du später hast
+        Navigator.pushNamed(context, '/peakflow');
         break;
 
       case 'Medikationsplan':
-        Navigator.pushNamed(context, '/medication'); // optional
+        Navigator.pushNamed(context, '/medication');
         break;
 
       case 'Warnungen':
-        Navigator.pushNamed(context, '/warnings'); // optional
+        Navigator.pushNamed(context, '/warnings');
         break;
 
       case 'Notfall':
-        Navigator.pushNamed(context, '/emergency'); // optional
+        Navigator.pushNamed(context, '/emergency');
         break;
 
       case 'Vitaldaten':

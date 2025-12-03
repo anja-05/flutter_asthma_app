@@ -12,7 +12,7 @@ class WarningScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime(2025, 10, 23));
+    final today = DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now());
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FCF9),
