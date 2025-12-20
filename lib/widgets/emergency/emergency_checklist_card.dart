@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../common/app_card.dart';
+import '../../models/emergency_step.dart';
 
+/// Zeigt eine Notfall-Checkliste mit mehreren Schritten an.
+/// Die Karte stellt eine visuelle Übersicht bereit und erlaubt
+/// einzelne Schritte anzutippen (z. B. für Details oder Aktionen).
 class EmergencyChecklistCard extends StatelessWidget {
+  /// Liste der anzuzeigenden Notfall-Schritte.
   final List<EmergencyStep> steps;
-  final VoidCallback? onStepTap;
+
+  /// Callback beim Antippen eines Schritts. Übergibt den Index des ausgewählten Schritts.
+  final Function(int)? onStepTap;
 
   const EmergencyChecklistCard({
     Key? key,
@@ -48,12 +55,19 @@ class EmergencyChecklistCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+
           ...steps.asMap().entries.map((entry) {
             final index = entry.key;
             final step = entry.value;
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _buildStep(index + 1, step),
+              child: GestureDetector(
+                onTap: onStepTap != null
+                    ? () => onStepTap!(index)
+                    : null,
+                child: _buildStep(index + 1, step),
+              ),
             );
           }).toList(),
         ],
@@ -67,32 +81,24 @@ class EmergencyChecklistCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: step.completed
+            ? Border.all(color: Colors.green, width: 1.5)
+            : null,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE53935),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '$number',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+          /// Status-Icon statt nur Nummer
+          Icon(
+            step.completed ? Icons.check_circle : Icons.circle_outlined,
+            color: step.completed ? Colors.green : const Color(0xFFE53935),
+            size: 22,
           ),
           const SizedBox(width: 12),
+
           Expanded(
             child: Text(
-              step.text,
+              '$number. ${step.text}',
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF212121),
@@ -103,14 +109,4 @@ class EmergencyChecklistCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class EmergencyStep {
-  final String text;
-  final bool completed;
-
-  EmergencyStep({
-    required this.text,
-    this.completed = false,
-  });
 }

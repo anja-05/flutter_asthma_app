@@ -1,13 +1,16 @@
 import 'package:url_launcher/url_launcher.dart';
 
+/// Service zum Auslösen eines Telefonanrufs über das Gerätesystem.
 class PhoneService {
-  static Future<void> call(String number) async {
-    final Uri uri = Uri(scheme: 'tel', path: number);
+  /// Startet einen Telefonanruf zur angegebenen Telefonnummer.
+  /// Gibt `true` zurück, wenn der Anruf erfolgreich gestartet wurde, andernfalls `false`.
+  static Future<bool> call(String number) async {
+    final uri = Uri(scheme: 'tel', path: number);
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
-    } else {
-      throw "Could not launch $uri";
+      return true;
     }
+    return false;
   }
 }

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
+/// Schwebender SOS-Button zur Auslösung eines Notrufs.
+/// Der Button zeigt je nach Status eine pulsierende Animation
+/// oder einen aktiven Zustand an.
 class FloatingSOSButton extends StatefulWidget {
+  /// Callback, der beim Drücken des SOS-Buttons ausgeführt wird.
   final VoidCallback onPressed;
+
+  /// Gibt an, ob der Notruf aktuell aktiv ist.
+  /// Bei aktivem Zustand wird die Animation deaktiviert und der Status visuell angepasst.
   final bool isActive;
 
   const FloatingSOSButton({

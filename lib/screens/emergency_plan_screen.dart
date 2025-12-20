@@ -8,7 +8,14 @@ import '../widgets/emergency/floating_sos_button.dart';
 import '../constants/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../models/emergency_step.dart';
 
+/// Bildschirm zur Anzeige des persönlichen Notfallplans.
+/// Der Screen zeigt:
+/// - eine Schritt-für-Schritt-Notfallanleitung
+/// - persönliche Notfallkontakte
+/// - allgemeine Hinweise
+/// - einen jederzeit erreichbaren SOS-Button
 class EmergencyPlanScreen extends StatefulWidget {
   const EmergencyPlanScreen({Key? key}) : super(key: key);
 
@@ -17,84 +24,103 @@ class EmergencyPlanScreen extends StatefulWidget {
 }
 
 class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
+  /// Liste der gespeicherten Notfallkontakte.
   final List<EmergencyContact> contacts = [];
 
-  // ---------------------------------------------------
-  // 🔹 Kontakte beim App-Start laden
-  // ---------------------------------------------------
+  /// Liste der Notfall-Schritte, deren Status (abgehakt / offen)
+  /// während der Laufzeit geändert werden kann.
+  late List<EmergencyStep> emergencySteps;
+
   @override
   void initState() {
     super.initState();
+
+    emergencySteps = [
+      EmergencyStep(text: 'Ruhe bewahren und aufrecht hinsetzen'),
+      EmergencyStep(
+        text: 'Schnellwirkendes Medikament (z. B. Inhalator) anwenden',
+      ),
+      EmergencyStep(text: 'Peak-Flow messen'),
+      EmergencyStep(
+        text: 'Wenn keine Besserung: Notruf oder Kontaktperson verständigen',
+      ),
+    ];
+
     _loadContacts();
   }
 
-  // ---------------------------------------------------
-  // 🔹 Kontakte aus SharedPreferences laden
-  // ---------------------------------------------------
-  void _loadContacts() async {
+  /// Lädt die gespeicherten Notfallkontakte aus den lokalen Einstellungen.
+  /// Bei fehlerhaften oder ungültigen Daten wird die Kontaktliste geleert.
+  Future<void> _loadContacts() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('contacts');
 
-    if (jsonString != null) {
+    if (jsonString == null) return;
+
+    try {
       final List decoded = json.decode(jsonString);
 
       setState(() {
-        contacts.clear();
-        contacts.addAll(decoded.map((c) => EmergencyContact(
-          id: c['id'],
-          name: c['name'],
-          phoneNumber: c['phoneNumber'],
-          relationship: c['relationship'],
-          isPrimary: c['isPrimary'],
-        )));
+        contacts
+          ..clear()
+          ..addAll(
+            decoded.map(
+                  (c) => EmergencyContact(
+                id: c['id'],
+                name: c['name'],
+                phoneNumber: c['phoneNumber'],
+                relationship: c['relationship'],
+                isPrimary: c['isPrimary'] ?? false,
+              ),
+            ),
+          );
       });
+    } catch (_) {
+      setState(() => contacts.clear());
     }
   }
 
-  // ---------------------------------------------------
-  // 🔹 Kontakte speichern
-  // ---------------------------------------------------
-  void _saveContacts() async {
+  /// Speichert die aktuellen Notfallkontakte lokal.
+  Future<void> _saveContacts() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final List mapList = contacts.map((c) => {
+    final List mapList = contacts
+        .map((c) => {
       'id': c.id,
       'name': c.name,
       'phoneNumber': c.phoneNumber,
       'relationship': c.relationship,
       'isPrimary': c.isPrimary,
-    }).toList();
+    })
+        .toList();
 
-    prefs.setString('contacts', json.encode(mapList));
+    await prefs.setString('contacts', json.encode(mapList));
   }
 
-  // ---------------------------------------------------
-  // 🔹 Dialog zum Kontakt hinzufügen
-  // ---------------------------------------------------
+  /// Öffnet einen Dialog zum Hinzufügen eines neuen Notfallkontakts.
+  /// Der erste angelegte Kontakt wird automatisch als primärer Kontakt markiert.
   void _showAddContactDialog() {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text("Neuen Kontakt hinzufügen"),
-        content: SizedBox(
-          height: 150,
-          child: Column(
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: "Name"),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(labelText: "Telefonnummer"),
-                keyboardType: TextInputType.phone,
-              ),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Name"),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: "Telefonnummer"),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -106,28 +132,45 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
               final name = nameController.text.trim();
               final phone = phoneController.text.trim();
 
-              if (name.isEmpty || phone.isEmpty) {
+              if (name.isEmpty || phone.length < 5) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text("Bitte beide Felder ausfüllen."),
+                    content: Text(
+                      "Bitte gültigen Namen und Telefonnummer eingeben.",
+                    ),
                   ),
                 );
                 return;
               }
 
               setState(() {
-                contacts.add(
-                  EmergencyContact(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: name,
-                    phoneNumber: phone,
-                    relationship: "Kontaktperson",
-                    isPrimary: contacts.isEmpty,
-                  ),
-                );
+                if (contacts.isEmpty) {
+                  contacts.add(
+                    EmergencyContact(
+                      id: DateTime.now()
+                          .millisecondsSinceEpoch
+                          .toString(),
+                      name: name,
+                      phoneNumber: phone,
+                      relationship: "Kontaktperson",
+                      isPrimary: true,
+                    ),
+                  );
+                } else {
+                  contacts.add(
+                    EmergencyContact(
+                      id: DateTime.now()
+                          .millisecondsSinceEpoch
+                          .toString(),
+                      name: name,
+                      phoneNumber: phone,
+                      relationship: "Kontaktperson",
+                    ),
+                  );
+                }
               });
 
-              _saveContacts(); // 🔹 speichern nach hinzufügen
+              _saveContacts();
               Navigator.pop(context);
             },
             child: const Text("Hinzufügen"),
@@ -137,18 +180,8 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
     );
   }
 
-  // ---------------------------------------------------
-  // 🔹 Oberfläche
-  // ---------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    final List<EmergencyStep> emergencySteps = [
-      EmergencyStep(text: 'Ruhe bewahren und aufrecht hinsetzen'),
-      EmergencyStep(text: 'Schnellwirkendes Medikament (z. B. Inhalator) anwenden'),
-      EmergencyStep(text: 'Peak-Flow messen'),
-      EmergencyStep(text: 'Wenn keine Besserung: Notruf oder Kontaktperson verständigen'),
-    ];
-
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
@@ -165,51 +198,39 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 8),
               const Text(
                 'Im Notfall schnell handeln – dein persönlicher Plan und SOS-Kontakte.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 14),
               ),
-
               const SizedBox(height: 8),
-
-              Row(
-                children: [
-                  Text(
-                    DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
-                        .format(DateTime.now()),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(Icons.wb_sunny, color: Colors.orangeAccent, size: 18),
-                ],
+              Text(
+                DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
+                    .format(DateTime.now()),
+                style: const TextStyle(fontSize: 14),
               ),
-
               const SizedBox(height: 24),
 
-              EmergencyChecklistCard(steps: emergencySteps),
-
+              EmergencyChecklistCard(
+                steps: emergencySteps,
+                onStepTap: (index) {
+                  setState(() {
+                    emergencySteps[index].completed =
+                    !emergencySteps[index].completed;
+                  });
+                },
+              ),
               const SizedBox(height: 24),
 
-              // 🔹 Kontaktliste MIT löschen
               EmergencyContactList(
                 contacts: contacts,
-                onCall: (contact) {
-                  PhoneService.call(contact.phoneNumber);
-                },
+                onCall: (c) => PhoneService.call(c.phoneNumber),
                 onAdd: _showAddContactDialog,
-                onDelete: (contact) {
+                onDelete: (c) {
                   setState(() {
-                    contacts.removeWhere((c) => c.id == contact.id);
+                    contacts.removeWhere((e) => e.id == c.id);
                   });
-                  _saveContacts(); // 🔹 speichern nach löschen
+                  _saveContacts();
                 },
               ),
 
@@ -230,14 +251,15 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
           ),
         ),
       ),
-
       bottomNavigationBar: FloatingSOSButton(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('SOS gedrückt – Hilfe wird geholt...')),
+            const SnackBar(
+              content:
+              Text('Demo: SOS-Funktion – in echter App Notrufauslösung.'),
+            ),
           );
         },
-        isActive: false,
       ),
     );
   }

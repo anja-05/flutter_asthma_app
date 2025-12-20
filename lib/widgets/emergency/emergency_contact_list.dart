@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 import '../common/app_card.dart';
 
+/// Zeigt eine Liste wichtiger Notfallkontakte an.
+/// Die Liste enthält persönliche Kontakte sowie eine feste Notrufnummer
+/// und unterstützt Aktionen wie Anrufen, Hinzufügen und Löschen.
 class EmergencyContactList extends StatelessWidget {
+  /// Liste der gespeicherten Notfallkontakte.
   final List<EmergencyContact> contacts;
+
+  /// Callback zum Anrufen eines Kontakts.
+  /// Übergibt den ausgewählten Kontakt.
   final Function(EmergencyContact)? onCall;
+
+  /// Callback zum Hinzufügen eines neuen Kontakts.
   final VoidCallback? onAdd;
+
+  /// Callback zum Löschen eines Kontakts.
+  /// Übergibt den zu löschenden Kontakt.
   final Function(EmergencyContact)? onDelete;
 
   const EmergencyContactList({
@@ -23,48 +35,34 @@ class EmergencyContactList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Icon(
-                  Icons.phone,
-                  color: Color(0xFF4CAF50),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Wichtige Kontakte',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF4CAF50),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          _buildHeader(),
           const SizedBox(height: 16),
 
-          // Emergency Number 112
           _buildEmergencyNumber(context),
+
+          if (contacts.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: Text(
+                'Noch keine persönlichen Notfallkontakte gespeichert.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF757575),
+                ),
+              ),
+            ),
 
           if (contacts.isNotEmpty) ...[
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Divider(color: Color(0xFFBDBDBD)),
             ),
-            ...contacts.map((contact) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildContact(context, contact),
-            )).toList(),
+            ...contacts.map(
+                  (contact) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildContact(context, contact),
+              ),
+            ),
           ],
 
           if (onAdd != null) ...[
@@ -83,24 +81,50 @@ class EmergencyContactList extends StatelessWidget {
     );
   }
 
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4CAF50).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: const Icon(
+            Icons.phone,
+            color: Color(0xFF4CAF50),
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Text(
+            'Wichtige Kontakte',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF4CAF50),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // NOTRUF 112 ist daweil nur Demo
   Widget _buildEmergencyNumber(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: [
-            const Icon(Icons.phone, color: Color(0xFFE53935), size: 20),
-            const SizedBox(width: 8),
-            const Column(
+          children: const [
+            Icon(Icons.phone, color: Color(0xFFE53935), size: 20),
+            SizedBox(width: 8),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Notruf',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF212121),
-                  ),
-                ),
+                Text('Notruf'),
                 Text(
                   '112',
                   style: TextStyle(
@@ -118,9 +142,12 @@ class EmergencyContactList extends StatelessWidget {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () {
-              // Launch phone dialer
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notruf 112 wird gewählt...')),
+                const SnackBar(
+                  content: Text(
+                    'Demo: In einer realen App würde jetzt der Notruf gewählt.',
+                  ),
+                ),
               );
             },
             icon: const Icon(Icons.phone),
@@ -139,6 +166,7 @@ class EmergencyContactList extends StatelessWidget {
     );
   }
 
+
   Widget _buildContact(BuildContext context, EmergencyContact contact) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,28 +174,40 @@ class EmergencyContactList extends StatelessWidget {
         Row(
           children: [
             Icon(
-              contact.isPrimary ? Icons.person : Icons.person_outline,
-              color: const Color(0xFF4CAF50),
+              contact.isPrimary ? Icons.star : Icons.person_outline,
+              color: contact.isPrimary
+                  ? const Color(0xFFFF9800)
+                  : const Color(0xFF4CAF50),
               size: 20,
             ),
             const SizedBox(width: 8),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    contact.relationship,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF757575),
+                  if (contact.isPrimary)
+                    const Text(
+                      'Primärer Kontakt',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFFFF9800),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
                   Text(
                     contact.name,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF212121),
+                    ),
+                  ),
+                  Text(
+                    contact.relationship,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF757575),
                     ),
                   ),
                   Text(
@@ -183,11 +223,7 @@ class EmergencyContactList extends StatelessWidget {
 
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () {
-                if (onDelete != null) {
-                  onDelete!(contact);
-                }
-              },
+              onPressed: () => _confirmDelete(context, contact),
             ),
           ],
         ),
@@ -215,13 +251,53 @@ class EmergencyContactList extends StatelessWidget {
       ],
     );
   }
+
+  void _confirmDelete(BuildContext context, EmergencyContact contact) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Kontakt löschen'),
+        content: Text(
+          'Möchtest du den Kontakt "${contact.name}" wirklich entfernen?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (onDelete != null) {
+                onDelete!(contact);
+              }
+            },
+            child: const Text(
+              'Löschen',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+/// Datenmodell für einen Notfallkontakt.
 class EmergencyContact {
+  /// Eindeutige ID des Kontakts.
   final String id;
+
+  /// Name der Kontaktperson.
   final String name;
+
+  /// Telefonnummer der Kontaktperson.
   final String phoneNumber;
+
+  /// Beziehung zur Kontaktperson (z. B. Mutter, Freund).
   final String relationship;
+
+  /// Gibt an, ob es sich um den primären Kontakt handelt.
   final bool isPrimary;
 
   EmergencyContact({

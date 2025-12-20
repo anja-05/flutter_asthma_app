@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import '../common/app_card.dart';
 
+/// Zeigt eine Notfall-Kontaktkarte mit Name, Beziehung und Telefonnummer an.
+/// Anruf- und Bearbeitungsaktionen sind nur vorhanden, wenn sie gesetzt sind.
 class EmergencyContactCard extends StatelessWidget {
+  /// Name der Kontaktperson.
   final String name;
+
+  /// Beziehung zur Kontaktperson (z. B. Mutter, Freund, Arzt).
   final String relationship;
+
+  /// Telefonnummer der Kontaktperson.
   final String phoneNumber;
+
+  /// Callback zum direkten Anrufen des Kontakts.
   final VoidCallback? onCall;
+
+  /// Callback zum Bearbeiten des Kontakts.
   final VoidCallback? onEdit;
 
   const EmergencyContactCard({
