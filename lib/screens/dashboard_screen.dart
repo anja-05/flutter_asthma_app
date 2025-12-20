@@ -22,7 +22,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final _authService = AuthService();
-  User? _currentUser;
+  AppUser? _currentUser;
   bool _isLoading = true;
 
   @override

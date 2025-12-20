@@ -1,12 +1,19 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../models/user.dart'; // enthält AppUser
 
 class AuthService {
-  static const String _userKey = 'current_user';
-  static const String _usersKey = 'registered_users';
+  final fb_auth.FirebaseAuth _auth = fb_auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Registrierung
+  /// 🔹 Firebase Auth-State-Stream (für AuthWrapper)
+  Stream<fb_auth.User?> get authStateChanges =>
+      _auth.authStateChanges();
+
+  // =========================
+  // REGISTRIERUNG
+  // =========================
   Future<bool> register({
     required String firstName,
     required String lastName,
@@ -14,100 +21,87 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Prüfe ob Email bereits existiert
-      final users = await _getAllUsers();
-      if (users.any((user) => user['user']['email'] == email)) {
-        return false; // Email bereits registriert
-      }
-
-      // Erstelle neuen User
-      final newUser = User(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        firstName: firstName,
-        lastName: lastName,
+      // 🔐 Firebase Authentication
+      final credential =
+      await _auth.createUserWithEmailAndPassword(
         email: email,
+        password: password,
       );
 
-      // Speichere User in Liste
-      users.add({
-        'user': newUser.toJson(),
-        'password': password, // In echter App: Password hashen!
+      final uid = credential.user!.uid;
+
+      // 👤 User-Profil in Firestore speichern
+      await _firestore.collection('users').doc(uid).set({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
-      await prefs.setString(_usersKey, jsonEncode(users));
       return true;
-    } catch (e) {
+    } on fb_auth.FirebaseAuthException {
+      return false;
+    } catch (_) {
       return false;
     }
   }
 
-  // Login
-  Future<User?> login(String email, String password) async {
+  // =========================
+  // LOGIN
+  // =========================
+  Future<AppUser?> login(String email, String password) async {
     try {
-      final users = await _getAllUsers();
-
-      // Finde User mit Email und Passwort
-      final userData = users.firstWhere(
-            (user) => user['user']['email'] == email && user['password'] == password,
-        orElse: () => {},
+      // 🔐 Firebase Authentication
+      final credential =
+      await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
 
-      if (userData.isEmpty) {
-        return null; // Login fehlgeschlagen
-      }
+      final uid = credential.user!.uid;
 
-      final user = User.fromJson(userData['user']);
+      // 📄 User-Profil aus Firestore laden
+      final doc =
+      await _firestore.collection('users').doc(uid).get();
 
-      // Speichere aktuellen User
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_userKey, jsonEncode(user.toJson()));
+      if (!doc.exists) return null;
 
-      return user;
-    } catch (e) {
+      return AppUser.fromMap(uid, doc.data()!);
+    } on fb_auth.FirebaseAuthException {
+      return null;
+    } catch (_) {
       return null;
     }
   }
 
-  // Logout
+  // =========================
+  // LOGOUT
+  // =========================
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userKey);
+    await _auth.signOut();
   }
 
-  // Aktuell eingeloggten User abrufen
-  Future<User?> getCurrentUser() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString(_userKey);
+  // =========================
+  // AKTUELLER USER
+  // =========================
+  Future<AppUser?> getCurrentUser() async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) return null;
 
-      if (userJson == null) return null;
+    final doc = await _firestore
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .get();
 
-      return User.fromJson(jsonDecode(userJson));
-    } catch (e) {
-      return null;
-    }
+    if (!doc.exists) return null;
+
+    return AppUser.fromMap(firebaseUser.uid, doc.data()!);
   }
 
-  // Prüfe ob User eingeloggt ist
+  // =========================
+  // IST EINGELOGGT?
+  // =========================
   Future<bool> isLoggedIn() async {
-    final user = await getCurrentUser();
-    return user != null;
-  }
-
-  // Hilfsfunktion: Alle registrierten User abrufen
-  Future<List<Map<String, dynamic>>> _getAllUsers() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final usersJson = prefs.getString(_usersKey);
-
-      if (usersJson == null) return [];
-
-      final List<dynamic> usersList = jsonDecode(usersJson);
-      return usersList.cast<Map<String, dynamic>>();
-    } catch (e) {
-      return [];
-    }
+    return _auth.currentUser != null;
   }
 }

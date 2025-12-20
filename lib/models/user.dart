@@ -1,36 +1,38 @@
-class User {
-  final String id;
+class AppUser {
+  final String id;        // Firebase UID
   final String firstName;
   final String lastName;
   final String email;
 
-  User({
+  AppUser({
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.email,
   });
 
-  String get fullName => '$firstName $lastName';
-  String get displayName => firstName; // Nur Vorname für "Hallo, Max!"
+  /// Anzeigename (z. B. "Hallo Lisa")
+  String get displayName => firstName;
 
-  // Zu JSON konvertieren
-  Map<String, dynamic> toJson() {
+  /// Voller Name
+  String get fullName => '$firstName $lastName';
+
+  /// 🔹 Für Firestore
+  Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'firstName': firstName,
       'lastName': lastName,
       'email': email,
     };
   }
 
-  // Von JSON erstellen
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      email: json['email'],
+  /// 🔹 Aus Firestore lesen
+  factory AppUser.fromMap(String id, Map<String, dynamic> data) {
+    return AppUser(
+      id: id,
+      firstName: data['firstName'],
+      lastName: data['lastName'],
+      email: data['email'],
     );
   }
 }

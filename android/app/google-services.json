@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "182096194284",
+    "project_id": "asthmaassist-e3541",
+    "storage_bucket": "asthmaassist-e3541.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182096194284:android:5425fda372e6603fbb93c9",
+        "android_client_info": {
+          "package_name": "com.example.asthma_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzOKCL01ZQX-gdjv6ftrXG4eBC8M0Fid4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

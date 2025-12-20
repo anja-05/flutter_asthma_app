@@ -36,6 +36,11 @@ dependencies:
   # Utils für Datum-Formatierung
   intl: ^0.20.2
 
+  # Fhir Base datenbank
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+
   # Lokale Datenspeicherung für Login
   shared_preferences: ^2.2.2
 
