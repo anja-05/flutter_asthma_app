@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
+import '../../services/phone_service.dart';
 
 /// Schwebender SOS-Button zur Auslösung eines Notrufs.
 /// Der Button zeigt je nach Status eine pulsierende Animation
@@ -23,6 +26,9 @@ class FloatingSOSButton extends StatefulWidget {
 
 class _FloatingSOSButtonState extends State<FloatingSOSButton>
     with SingleTickerProviderStateMixin {
+  int _countdown = 3;
+  bool _isCountingDown = false;
+  Timer? _timer;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -37,6 +43,33 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+  }
+
+  void _startSOSCountdown(BuildContext context) {
+    setState(() {
+      _isCountingDown = true;
+      _countdown = 3;
+    });
+
+    HapticFeedback.mediumImpact();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_countdown == 1) {
+        timer.cancel();
+        HapticFeedback.heavyImpact();
+
+        PhoneService.call('112');
+
+        setState(() {
+          _isCountingDown = false;
+        });
+      } else {
+        setState(() {
+          _countdown--;
+        });
+        HapticFeedback.selectionClick();
+      }
+    });
   }
 
   @override
@@ -70,7 +103,35 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                   width: double.infinity,
                   height: 72,
                   child: ElevatedButton(
-                    onPressed: widget.onPressed,
+                    onPressed: widget.isActive || _isCountingDown
+                        ? null
+                        : () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Notruf auslösen'),
+                          content: const Text(
+                            'Möchtest du wirklich den Notruf 112 auslösen?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Abbrechen'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _startSOSCountdown(context);
+                              },
+                              child: const Text('SOS starten'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE53935),
                       foregroundColor: Colors.white,
@@ -84,12 +145,20 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          widget.isActive ? Icons.check_circle : Icons.warning,
+                          _isCountingDown
+                              ? Icons.timer
+                              : widget.isActive
+                              ? Icons.check_circle
+                              : Icons.warning,
                           size: 32,
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          widget.isActive ? 'Notruf aktiv' : 'SOS',
+                          _isCountingDown
+                              ? 'Notruf in $_countdown…'
+                              : widget.isActive
+                              ? 'Notruf aktiv'
+                              : 'SOS',
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -97,6 +166,7 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                         ),
                       ],
                     ),
+
                   ),
                 ),
               );

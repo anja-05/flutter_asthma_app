@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../common/app_card.dart';
+import 'package:Asthma_Assist/services/phone_service.dart';
 
 /// Zeigt eine Liste wichtiger Notfallkontakte an.
 /// Die Liste enthält persönliche Kontakte sowie eine feste Notrufnummer
@@ -11,6 +12,10 @@ class EmergencyContactList extends StatelessWidget {
   /// Callback zum Anrufen eines Kontakts.
   /// Übergibt den ausgewählten Kontakt.
   final Function(EmergencyContact)? onCall;
+
+  /// Callback zum Bearbeiten eines Kontakts.
+  /// Übergibt den zu bearbeitenden Kontakt.
+  final Function(EmergencyContact)? onEdit;
 
   /// Callback zum Hinzufügen eines neuen Kontakts.
   final VoidCallback? onAdd;
@@ -25,6 +30,7 @@ class EmergencyContactList extends StatelessWidget {
     this.onCall,
     this.onAdd,
     this.onDelete,
+    this.onEdit,
   }) : super(key: key);
 
   @override
@@ -142,13 +148,7 @@ class EmergencyContactList extends StatelessWidget {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Demo: In einer realen App würde jetzt der Notruf gewählt.',
-                  ),
-                ),
-              );
+              PhoneService.call('112');
             },
             icon: const Icon(Icons.phone),
             label: const Text('Notruf wählen'),
@@ -220,10 +220,23 @@ class EmergencyContactList extends StatelessWidget {
                 ],
               ),
             ),
-
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _confirmDelete(context, contact),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.orange),
+                  tooltip: 'Kontakt bearbeiten',
+                  onPressed: () {
+                    if (onEdit != null) {
+                      onEdit!(contact);
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  tooltip: 'Kontakt löschen',
+                  onPressed: () => _confirmDelete(context, contact),
+                ),
+              ],
             ),
           ],
         ),

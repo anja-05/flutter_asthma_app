@@ -19,6 +19,7 @@ import 'screens/medication_plan_screen.dart';
 import 'screens/peak_flow_screen.dart';
 import 'screens/warnings_screen.dart';
 import 'screens/fhir_observation_screen.dart';
+import 'screens/main_shell.dart';
 
 // Fitbit (bleibt unberührt)
 import 'package:fitbitter/fitbitter.dart';
@@ -92,7 +93,7 @@ class AuthWrapper extends StatelessWidget {
 
         // ✅ Eingeloggt → Dashboard
         if (snapshot.hasData) {
-          return const DashboardScreen();
+          return const MainShell();
         }
 
         // ❌ Nicht eingeloggt → Login

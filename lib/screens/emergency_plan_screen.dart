@@ -180,6 +180,73 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
     );
   }
 
+  /// Öffnet einen Dialog zum Bearbeiten eines Notfallkontakts.
+  void _showEditContactDialog(EmergencyContact contact) {
+    final nameController = TextEditingController(text: contact.name);
+    final phoneController = TextEditingController(text: contact.phoneNumber);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Kontakt bearbeiten"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Name"),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: "Telefonnummer"),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Abbrechen"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newName = nameController.text.trim();
+              final newPhone = phoneController.text.trim();
+
+              if (newName.isEmpty || newPhone.length < 5) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Bitte gültige Daten eingeben."),
+                  ),
+                );
+                return;
+              }
+
+              setState(() {
+                final index =
+                contacts.indexWhere((c) => c.id == contact.id);
+                if (index != -1) {
+                  contacts[index] = EmergencyContact(
+                    id: contact.id,
+                    name: newName,
+                    phoneNumber: newPhone,
+                    relationship: contact.relationship,
+                    isPrimary: contact.isPrimary,
+                  );
+                }
+              });
+
+              _saveContacts();
+              Navigator.pop(context);
+            },
+            child: const Text("Speichern"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -226,6 +293,7 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
                 contacts: contacts,
                 onCall: (c) => PhoneService.call(c.phoneNumber),
                 onAdd: _showAddContactDialog,
+                onEdit: (c) => _showEditContactDialog(c),
                 onDelete: (c) {
                   setState(() {
                     contacts.removeWhere((e) => e.id == c.id);
@@ -252,14 +320,7 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
         ),
       ),
       bottomNavigationBar: FloatingSOSButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:
-              Text('Demo: SOS-Funktion – in echter App Notrufauslösung.'),
-            ),
-          );
-        },
+        onPressed: () {},
       ),
     );
   }

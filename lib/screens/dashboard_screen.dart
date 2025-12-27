@@ -170,6 +170,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _onBottomNavTap(int index) {
+    switch (index) {
+      case 0:
+      // Home
+        Navigator.pushReplacementNamed(context, '/dashboard');
+        break;
+
+      case 1:
+      // Tagebuch
+        Navigator.pushReplacementNamed(context, '/symptoms');
+        break;
+
+      case 2:
+      // Peak-Flow
+        Navigator.pushReplacementNamed(context, '/peakflow');
+        break;
+
+      case 3:
+      // Medikation
+        Navigator.pushReplacementNamed(context, '/medication');
+        break;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -185,14 +209,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
 
-      /// >>> BOTTOM NAVIGATION HINZUGEFÜGT <<<
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 0,
-        onTap: (index) {
-          // Kann später zu Screens navigieren
-        },
-      ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -200,7 +216,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// >>> GREETING HEADER HINZUGEFÜGT <<<
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
