@@ -13,7 +13,7 @@ import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/vital_data_screen.dart';
-import 'screens/symptom_diary_screen.dart';
+import 'screens/symptom/symptom_diary_screen.dart';
 import 'screens/emergency_plan_screen.dart';
 import 'screens/medication_plan_screen.dart';
 import 'screens/peak_flow_screen.dart';

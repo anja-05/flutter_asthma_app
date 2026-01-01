@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/common/bottom_navigation.dart';
 
 import 'dashboard_screen.dart';
-import 'symptom_diary_screen.dart';
+import 'symptom/symptom_diary_screen.dart';
 import 'peak_flow_screen.dart';
 import 'medication_plan_screen.dart';
 
