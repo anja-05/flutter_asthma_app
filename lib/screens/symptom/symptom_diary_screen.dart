@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/app_colors.dart';
 import 'symptom_entry_tab.dart';
 import 'symptom_history_tab.dart';
+import '../../services/auth_service.dart';
+import '../../services/fhir_observation_service.dart';
 
 class SymptomDiaryScreen extends StatefulWidget {
   const SymptomDiaryScreen({super.key});
@@ -17,17 +19,37 @@ class SymptomDiaryScreen extends StatefulWidget {
 class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
   final List<Map<String, dynamic>> _history = [];
 
+  final _observationService = FhirObservationService();
+  final _authService = AuthService();
+
+
   @override
   void initState() {
     super.initState();
     _loadHistory();
   }
 
-  void addEntry(Map<String, dynamic> entry) {
-    setState(() {
-      _history.insert(0, entry);
-    });
+  void addEntry(Map<String, dynamic> entry) async {
+    setState(() => _history.insert(0, entry));
     _persistHistory();
+
+    final user = await _authService.getCurrentUser();
+    if (user == null || user.fhirPatientId == null) return;
+
+    final dateTime = DateFormat('dd.MM.yyyy HH:mm')
+        .parse('${entry['date']} ${entry['time']}');
+
+    final symptoms = Map<String, int>.from(entry['symptoms']);
+
+    for (final s in symptoms.entries) {
+      await _observationService.saveSymptom(
+        patientId: user.fhirPatientId!,
+        symptomName: s.key,
+        intensity: s.value,
+        dateTime: dateTime,
+        notes: entry['notes'],
+      );
+    }
   }
 
   Future<void> _loadHistory() async {

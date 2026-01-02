@@ -1,38 +1,37 @@
 class AppUser {
-  final String id;        // Firebase UID
+  final String id;
   final String firstName;
   final String lastName;
   final String email;
+  final String? fhirPatientId;
 
   AppUser({
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.email,
+    this.fhirPatientId,
   });
 
-  /// Anzeigename (z. B. "Hallo Lisa")
   String get displayName => firstName;
-
-  /// Voller Name
   String get fullName => '$firstName $lastName';
 
-  /// 🔹 Für Firestore
   Map<String, dynamic> toMap() {
     return {
       'firstName': firstName,
       'lastName': lastName,
       'email': email,
+      'fhirPatientId': fhirPatientId,
     };
   }
 
-  /// 🔹 Aus Firestore lesen
   factory AppUser.fromMap(String id, Map<String, dynamic> data) {
     return AppUser(
       id: id,
       firstName: data['firstName'],
       lastName: data['lastName'],
       email: data['email'],
+      fhirPatientId: data['fhirPatientId'],
     );
   }
 }

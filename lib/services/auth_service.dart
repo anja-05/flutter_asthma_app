@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../models/user.dart'; // enthält AppUser
+import '../models/user.dart';
+import 'package:Asthma_Assist/services/fhir_patient_service.dart';
 
 class AuthService {
   final fb_auth.FirebaseAuth _auth = fb_auth.FirebaseAuth.instance;
@@ -38,6 +39,9 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      // ✅ WICHTIG: User wieder ausloggen
+      await _auth.signOut();
+
       return true;
     } on fb_auth.FirebaseAuthException {
       return false;
@@ -51,7 +55,6 @@ class AuthService {
   // =========================
   Future<AppUser?> login(String email, String password) async {
     try {
-      // 🔐 Firebase Authentication
       final credential =
       await _auth.signInWithEmailAndPassword(
         email: email,
@@ -59,20 +62,38 @@ class AuthService {
       );
 
       final uid = credential.user!.uid;
-
-      // 📄 User-Profil aus Firestore laden
-      final doc =
-      await _firestore.collection('users').doc(uid).get();
+      final docRef = _firestore.collection('users').doc(uid);
+      final doc = await docRef.get();
 
       if (!doc.exists) return null;
 
-      return AppUser.fromMap(uid, doc.data()!);
+      AppUser user = AppUser.fromMap(uid, doc.data()!);
+
+      // 🏥 FHIR Patient sicherstellen
+      final fhirService = FhirPatientService();
+      final patientId = await fhirService.ensurePatientForUser(
+        uid: uid,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      );
+
+      // 🔁 Falls noch keine FHIR-ID gespeichert ist
+      if (user.fhirPatientId == null) {
+        await docRef.update({
+          'fhirPatientId': patientId,
+        });
+      }
+
+      // 🔄 User erneut laden (jetzt inkl. fhirPatientId)
+      final updatedDoc = await docRef.get();
+      return AppUser.fromMap(uid, updatedDoc.data()!);
+
     } on fb_auth.FirebaseAuthException {
-      return null;
-    } catch (_) {
       return null;
     }
   }
+
 
   // =========================
   // LOGOUT
