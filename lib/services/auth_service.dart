@@ -1,89 +1,142 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/user.dart';
+import 'package:Asthma_Assist/services/fhir_patient_service.dart';
 
-/// FhirPatientService ist ein Service, der dafür sorgt, dass ein FHIR-Patient für den angegebenen Benutzer existiert.
-/// Falls noch kein FHIR-Patient existiert, wird dieser erstellt und die Patient-ID in Firestore gespeichert.
+/// AuthService ist ein Service, der die Benutzer-Authentifizierung und das Management des Benutzerprofils über Firebase Auth und Firestore übernimmt.
+/// Dieser Service verwaltet alle relevanten Authentifizierungsoperationen wie Registrierung, Login, Logout und die Verwaltung des aktuellen Benutzers.
 ///
-/// Der Service kommuniziert mit einem FHIR-Server (HAPI FHIR) und der Firebase Firestore-Datenbank.
-///
-/// Mit dieser Klasse können Benutzerinformationen wie der Name und die E-Mail-Adresse eines Benutzers in einem FHIR-Patienten-Datensatz gespeichert werden.
-/// Falls der Benutzer bereits mit einem FHIR-Patienten verknüpft ist, wird die bereits vorhandene Patient-ID verwendet.
-class FhirPatientService {
-  static const String _baseUrl = 'https://hapi.fhir.org/baseR5';
-
+/// Der Service verwendet Firebase Auth für die Authentifizierung und Firestore zur Speicherung der Benutzerprofile.
+/// Außerdem stellt der Service sicher, dass jeder Benutzer mit einem FHIR-Patienten-Datensatz verknüpft ist (mithilfe des [FhirPatientService]).
+class AuthService {
+  final fb_auth.FirebaseAuth _auth = fb_auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Stellt sicher, dass ein FHIR-Patient für den Benutzer existiert.
-  /// Falls noch keiner existiert, wird ein neuer FHIR-Patient erstellt und die Patient-ID in Firestore gespeichert.
+  /// Firebase Auth-State-Stream (für AuthWrapper):
+  /// Dieser Stream gibt den Authentifizierungsstatus des Benutzers zurück (z. B. ob der Benutzer eingeloggt ist).
+  /// Der Stream sendet Ereignisse, wenn sich der Authentifizierungsstatus des Benutzers ändert.
+  Stream<fb_auth.User?> get authStateChanges => _auth.authStateChanges();
+
+  /// Registriert einen neuen Benutzer in Firebase Auth und speichert das Benutzerprofil in Firestore.
+  /// Nach der Registrierung wird der Benutzer automatisch ausgeloggt.
   ///
-  /// [uid] ist die Benutzer-ID, die in Firebase gespeichert ist.
-  /// [email] ist die E-Mail-Adresse des Benutzers, die im Patienten-Datensatz gespeichert wird.
   /// [firstName] ist der Vorname des Benutzers.
   /// [lastName] ist der Nachname des Benutzers.
+  /// [email] ist die E-Mail-Adresse des Benutzers.
+  /// [password] ist das Passwort des Benutzers.
   ///
-  /// Diese Methode gibt die FHIR-Patienten-ID zurück, entweder eine bestehende oder die neu erstellte.
+  /// Gibt `true` zurück, wenn die Registrierung erfolgreich war, andernfalls `false`.
   ///
-  /// **Fehlerbehandlung**:
-  /// Falls die Erstellung des FHIR-Patienten fehlschlägt, wird eine Ausnahme ausgelöst.
-  ///
-  /// **Datenfluss**:
-  /// Zuerst wird geprüft, ob der Benutzer bereits mit einem FHIR-Patienten verknüpft ist. Falls ja, wird die bestehende ID zurückgegeben.
-  /// Falls kein FHIR-Patient existiert, wird ein neuer Patient mit den übergebenen Informationen erstellt.
-  /// Die Patient-ID wird nach der erfolgreichen Erstellung in Firestore gespeichert.
-  ///
-  /// **Rückgabewert**:
-  /// Gibt die Patient-ID des FHIR-Patienten zurück.
-  Future<String> ensurePatientForUser({
-    required String uid,
-    required String email,
+  /// **Fehlerbehandlung**: Falls ein Fehler bei der Firebase Auth-Registrierung oder der Speicherung in Firestore auftritt,
+  /// wird `false` zurückgegeben.
+  Future<bool> register({
     required String firstName,
     required String lastName,
+    required String email,
+    required String password,
   }) async {
-    final userDoc = _firestore.collection('users').doc(uid);
-    final snapshot = await userDoc.get();
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    if (snapshot.data()?['fhirPatientId'] != null) {
-      return snapshot['fhirPatientId'];
+      final uid = credential.user!.uid;
+
+      await _firestore.collection('users').doc(uid).set({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      await _auth.signOut();
+
+      return true;
+    } on fb_auth.FirebaseAuthException {
+      return false;
+    } catch (_) {
+      return false;
     }
+  }
 
-    final patient = {
-      "resourceType": "Patient",
-      "identifier": [
-        {
-          "system": "urn:firebase:uid",
-          "value": uid
-        }
-      ],
-      "name": [
-        {
-          "family": lastName,
-          "given": [firstName]
-        }
-      ],
-      "telecom": [
-        {
-          "system": "email",
-          "value": email
-        }
-      ]
-    };
 
-    final response = await http.post(
-      Uri.parse('$_baseUrl/Patient'),
-      headers: {'Content-Type': 'application/fhir+json'},
-      body: jsonEncode(patient),
-    );
+  /// Meldet einen Benutzer mit den angegebenen Anmeldedaten (E-Mail und Passwort) an.
+  /// Wenn der Login erfolgreich ist, wird das Benutzerprofil aus Firestore geladen.
+  /// Zusätzlich wird überprüft, ob der Benutzer bereits mit einem FHIR-Patienten verknüpft ist.
+  ///
+  /// [email] ist die E-Mail-Adresse des Benutzers.
+  /// [password] ist das Passwort des Benutzers.
+  ///
+  /// Gibt ein [AppUser]-Objekt zurück, das den Benutzer darstellt, wenn der Login erfolgreich war,
+  /// andernfalls `null`, falls der Login fehlschlägt.
+  Future<AppUser?> login(String email, String password) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    if (response.statusCode != 201 && response.statusCode != 200) {
-      throw Exception('FHIR Patient creation failed');
+      final uid = credential.user!.uid;
+      final docRef = _firestore.collection('users').doc(uid);
+      final doc = await docRef.get();
+
+      if (!doc.exists) return null;
+
+      AppUser user = AppUser.fromMap(uid, doc.data()!);
+
+
+      final fhirService = FhirPatientService();
+      final patientId = await fhirService.ensurePatientForUser(
+        uid: uid,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      );
+
+
+      if (user.fhirPatientId == null) {
+        await docRef.update({
+          'fhirPatientId': patientId,
+        });
+      }
+
+
+      final updatedDoc = await docRef.get();
+      return AppUser.fromMap(uid, updatedDoc.data()!);
+
+    } on fb_auth.FirebaseAuthException {
+      return null;
     }
+  }
 
-    final body = jsonDecode(response.body);
-    final patientId = body['id'];
 
-    await userDoc.update({'fhirPatientId': patientId});
+  /// Meldet den aktuellen Benutzer ab, indem die `signOut()`-Methode von Firebase Auth aufgerufen wird.
+  Future<void> logout() async {
+    await _auth.signOut();
+  }
 
-    return patientId;
+
+  /// Gibt den aktuell angemeldeten Benutzer als [AppUser] zurück.
+  /// Falls kein Benutzer eingeloggt ist, wird `null` zurückgegeben.
+  ///
+  /// **Fehlerbehandlung**: Wenn der Benutzer in Firestore nicht gefunden wird, wird `null` zurückgegeben.
+  Future<AppUser?> getCurrentUser() async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) return null;
+
+    final doc = await _firestore
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .get();
+
+    if (!doc.exists) return null;
+
+    return AppUser.fromMap(firebaseUser.uid, doc.data()!);
+  }
+
+  /// Gibt `true` zurück, wenn der Benutzer derzeit eingeloggt ist, andernfalls `false`.
+  Future<bool> isLoggedIn() async {
+    return _auth.currentUser != null;
   }
 }
