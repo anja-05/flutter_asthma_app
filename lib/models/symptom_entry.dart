@@ -1,12 +1,23 @@
+/// Repräsentiert einen Eintrag in einer Asthma‑App.
+/// Enthält eine eindeutige ID, Datum/Zeit, die erfassten Symptome mit Intensitäten (0–5),
+/// die Häufigkeit, Notizen,Auslöser und einen Trend (true = besser, false = schlechter).
 class SymptomEntry {
+  /// Eindeutiger Bezeichner für den Eintrag.
   final String id;
+  /// Datum und Uhrzeit des Eintrags.
   final DateTime date;
-  final Map<String, int> symptoms; // Symptom name -> Intensity (0-5)
-  final String frequency; // "Selten", "Gelegentlich", "Häufig"
+  /// Map mit Symptomnamen und Intensität (0–5).
+  final Map<String, int> symptoms;
+  /// Häufigkeit der Symptome.
+  final String frequency;
+  /// Optionale Notizen zum Eintrag.
   final String? notes;
+  /// Optionaler Auslöser für die Symptome.
   final String? trigger;
-  final bool trend; // true = besser, false = schlechter
+  /// Trend: true = besser, false = schlechter.
+  final bool trend;
 
+  /// Erstellt einen neuen Symptom-Eintrag mit den angegebenen Werten.
   SymptomEntry({
     required this.id,
     required this.date,
@@ -17,7 +28,7 @@ class SymptomEntry {
     this.trend = false,
   });
 
-  // Für Mock-Daten
+  /// Fabrikmethode für Test‑ oder Mock‑Daten.
   factory SymptomEntry.mock({
     required String id,
     required DateTime date,
@@ -38,29 +49,29 @@ class SymptomEntry {
     );
   }
 
-  // Formatiertes Datum
+  /// Liefert das Datum des Eintrags im Format „TT.MM.JJJJ“.
   String get formattedDate {
     return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
   }
 
-  // Formatierte Zeit
+  /// Liefert die Uhrzeit des Eintrags im Format „HH:MM“.
   String get formattedTime {
     return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  // Durchschnittliche Intensität aller Symptome
+  /// Berechnet die durchschnittliche Intensität aller Symptome; bei leerer Liste wird 0 zurückgegeben.
   double get averageIntensity {
     if (symptoms.isEmpty) return 0;
     final total = symptoms.values.reduce((a, b) => a + b);
     return total / symptoms.length;
   }
 
-  // Liste der Symptom-Namen
+  /// Erzeugt eine kommagetrennte Liste der Symptomnamen.
   String get symptomsList {
     return symptoms.keys.join(', ');
   }
 
-  // JSON Serialisierung (für später mit Backend)
+  /// Serialisiert den Eintrag in ein JSON‑kompatibles Map-Objekt.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -73,6 +84,7 @@ class SymptomEntry {
     };
   }
 
+  /// Erzeugt einen `SymptomEntry` aus einer JSON‑Map.
   factory SymptomEntry.fromJson(Map<String, dynamic> json) {
     return SymptomEntry(
       id: json['id'],
