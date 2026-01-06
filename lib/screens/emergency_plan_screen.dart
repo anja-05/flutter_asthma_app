@@ -10,13 +10,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/emergency_step.dart';
 
+
+
 /// Bildschirm zur Anzeige des persönlichen Notfallplans.
-/// Der Screen zeigt:
-/// - eine Schritt-für-Schritt-Notfallanleitung
-/// - persönliche Notfallkontakte
-/// - allgemeine Hinweise
-/// - einen jederzeit erreichbaren SOS-Button
+///
+/// Dieser Screen vereint mehrere Elemente:
+/// – eine Schritt-für-Schritt-Notfallanleitung (Checkliste)
+/// – eine Liste persönlicher Notfallkontakte zum schnellen Anrufen
+/// – allgemeine Hinweise für Notfallsituationen
+/// – einen jederzeit erreichbaren SOS‑Button
 class EmergencyPlanScreen extends StatefulWidget {
+  /// Erstellt einen neuen `EmergencyPlanScreen`.
   const EmergencyPlanScreen({Key? key}) : super(key: key);
 
   @override
@@ -25,10 +29,19 @@ class EmergencyPlanScreen extends StatefulWidget {
 
 class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
   /// Liste der gespeicherten Notfallkontakte.
+  ///
+  /// Die Liste wird zur Laufzeit durch [_loadContacts] aus dem lokalen
+  /// `SharedPreferences`-Speicher befüllt und kann durch den Benutzer ergänzt,
+  /// bearbeitet oder gelöscht werden. Jeder Eintrag enthält eine ID, Name,
+  /// Telefonnummer, Beziehungsbeschreibung und den Hinweis, ob es sich um den
+  /// primären Kontakt handelt.
   final List<EmergencyContact> contacts = [];
 
-  /// Liste der Notfall-Schritte, deren Status (abgehakt / offen)
-  /// während der Laufzeit geändert werden kann.
+  /// Liste der Notfall-Schritte mit änderbarem Abschlussstatus.
+  ///
+  /// Jeder [EmergencyStep] beschreibt eine Handlung im Notfallplan und enthält
+  /// ein boolesches Feld, das anzeigt, ob der Schritt bereits erledigt ist.
+  /// Der Status kann in der UI durch Antippen der Schritte umgeschaltet werden.
   late List<EmergencyStep> emergencySteps;
 
   @override
@@ -38,7 +51,7 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
     emergencySteps = [
       EmergencyStep(text: 'Ruhe bewahren und aufrecht hinsetzen'),
       EmergencyStep(
-        text: 'Schnellwirkendes Medikament (z. B. Inhalator) anwenden',
+        text: 'Schnellwirkendes Medikament (z. B. Inhalator) anwenden',
       ),
       EmergencyStep(text: 'Peak-Flow messen'),
       EmergencyStep(
@@ -50,7 +63,11 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
   }
 
   /// Lädt die gespeicherten Notfallkontakte aus den lokalen Einstellungen.
-  /// Bei fehlerhaften oder ungültigen Daten wird die Kontaktliste geleert.
+  ///
+  /// Liest eine JSON‑Zeichenkette mit dem Schlüssel `'contacts'` aus
+  /// `SharedPreferences`. Wird kein Wert gefunden, geschieht nichts.
+  /// Schlägt das Decodieren fehl, wird die [contacts]-Liste geleert, um
+  /// fehlerhafte Daten zu vermeiden.
   Future<void> _loadContacts() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('contacts');
@@ -81,6 +98,9 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
   }
 
   /// Speichert die aktuellen Notfallkontakte lokal.
+  ///
+  /// Serialisiert [contacts] als JSON und schreibt sie mit dem Schlüssel
+  /// `'contacts'` in `SharedPreferences`.
   Future<void> _saveContacts() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -98,7 +118,10 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
   }
 
   /// Öffnet einen Dialog zum Hinzufügen eines neuen Notfallkontakts.
-  /// Der erste angelegte Kontakt wird automatisch als primärer Kontakt markiert.
+  ///
+  /// Der Benutzer gibt Name und Telefonnummer ein. Der erste Kontakt in einer
+  /// leeren Liste wird automatisch als primär markiert. Bei ungültigen Eingaben
+  /// wird ein Hinweis als `SnackBar` gezeigt und der Dialog nicht geschlossen.
   void _showAddContactDialog() {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
@@ -147,9 +170,7 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
                 if (contacts.isEmpty) {
                   contacts.add(
                     EmergencyContact(
-                      id: DateTime.now()
-                          .millisecondsSinceEpoch
-                          .toString(),
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
                       name: name,
                       phoneNumber: phone,
                       relationship: "Kontaktperson",
@@ -159,9 +180,7 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
                 } else {
                   contacts.add(
                     EmergencyContact(
-                      id: DateTime.now()
-                          .millisecondsSinceEpoch
-                          .toString(),
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
                       name: name,
                       phoneNumber: phone,
                       relationship: "Kontaktperson",
@@ -180,7 +199,12 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
     );
   }
 
-  /// Öffnet einen Dialog zum Bearbeiten eines Notfallkontakts.
+  /// Öffnet einen Dialog zum Bearbeiten eines bestehenden Notfallkontakts.
+  ///
+  /// Die Eingabefelder sind mit den aktuellen Daten des Kontakts vorbelegt.
+  /// Nach erfolgreicher Eingabe werden die geänderten Daten in [contacts]
+  /// ersetzt und über [_saveContacts] gespeichert. Ungültige Eingaben werden
+  /// mit einer `SnackBar` kommentiert.
   void _showEditContactDialog(EmergencyContact contact) {
     final nameController = TextEditingController(text: contact.name);
     final phoneController = TextEditingController(text: contact.phoneNumber);
@@ -224,8 +248,7 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
               }
 
               setState(() {
-                final index =
-                contacts.indexWhere((c) => c.id == contact.id);
+                final index = contacts.indexWhere((c) => c.id == contact.id);
                 if (index != -1) {
                   contacts[index] = EmergencyContact(
                     id: contact.id,
@@ -249,6 +272,9 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Baut die Benutzeroberfläche des Notfallplans.
+    // Enthält Überschrift, Datum, Notfall-Checkliste, Kontaktliste,
+    // Hinweis-Karte und einen SOS-Button in der Fußzeile.
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
