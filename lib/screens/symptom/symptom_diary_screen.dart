@@ -9,7 +9,14 @@ import 'symptom_history_tab.dart';
 import '../../services/auth_service.dart';
 import '../../services/fhir_observation_service.dart';
 
+
+/// Bildschirm für das Symptomtagebuch.
+///
+/// Zeigt zwei Registerkarten an: Eine zum Eingeben neuer Symptome und eine zum
+/// Anzeigen der bisherigen Einträge. Einträge werden lokal gespeichert und
+/// über den [FhirObservationService] an einen FHIR‐Server übertragen.
 class SymptomDiaryScreen extends StatefulWidget {
+  /// Erstellt einen neuen [SymptomDiaryScreen].
   const SymptomDiaryScreen({super.key});
 
   @override
@@ -17,11 +24,18 @@ class SymptomDiaryScreen extends StatefulWidget {
 }
 
 class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
+  /// Liste der bisherigen Einträge im Tagebuch.
+  ///
+  /// Jeder Eintrag ist eine `Map` mit Schlüsseln wie `date`, `time`, `symptoms`
+  /// und optional `notes`. Die Liste wird beim Laden der Seite aus dem
+  /// persistenten Speicher befüllt.
   final List<Map<String, dynamic>> _history = [];
 
+  /// Service zum Speichern von Symptomen als FHIR‐Observation.
   final _observationService = FhirObservationService();
-  final _authService = AuthService();
 
+  /// Service zur Authentifizierung und zum Abrufen des aktuellen Benutzers.
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -29,6 +43,18 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     _loadHistory();
   }
 
+  /// Fügt einen neuen Tagebuch-Eintrag hinzu und speichert ihn.
+  ///
+  /// Der Eintrag wird an den Anfang von [_history] eingefügt, in den
+  /// persistenten Speicher geschrieben und anschließend über den
+  /// [_observationService] als einzelne Observations für jeden Symptom‐Eintrag
+  /// an den FHIR‐Server gesendet. Enthält der aktuelle Benutzer keine gültige
+  /// `fhirPatientId`, werden keine Observations gesendet.
+  ///
+  /// Parameter:
+  /// * [entry] – Eine Map mit den Schlüsseln `date`, `time`, `symptoms`,
+  ///   optional `notes` und weiteren Metadaten. `symptoms` muss eine Map von
+  ///   Symptomnamen auf Intensitäten (als `int`) sein.
   void addEntry(Map<String, dynamic> entry) async {
     setState(() => _history.insert(0, entry));
     _persistHistory();
@@ -52,6 +78,11 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     }
   }
 
+  /// Lädt die gespeicherte Historie aus dem persistenten Speicher.
+  ///
+  /// Liest die gespeicherte JSON‐Zeichenkette aus `SharedPreferences` und
+  /// befüllt damit [_history]. Wenn keine Daten vorhanden sind, bleibt die
+  /// Liste unverändert.
   Future<void> _loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('symptom_history');
@@ -66,6 +97,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     }
   }
 
+  /// Persistiert die aktuelle Historie in `SharedPreferences`.
   Future<void> _persistHistory() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('symptom_history', jsonEncode(_history));
@@ -81,9 +113,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // =========================
-              // HEADER (wie im Screenshot)
-              // =========================
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Column(
@@ -127,9 +156,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
                 ),
               ),
 
-              // =========================
-              // TABS
-              // =========================
               const TabBar(
                 labelColor: Colors.black,
                 indicatorColor: AppColors.primaryGreen,
@@ -139,9 +165,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
                 ],
               ),
 
-              // =========================
-              // TAB CONTENT
-              // =========================
               Expanded(
                 child: TabBarView(
                   children: [
