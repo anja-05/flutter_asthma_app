@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:flutter/services.dart';
 import '../../services/phone_service.dart';
 
@@ -26,15 +25,13 @@ class FloatingSOSButton extends StatefulWidget {
 
 class _FloatingSOSButtonState extends State<FloatingSOSButton>
     with SingleTickerProviderStateMixin {
-  int _countdown = 3;
-  bool _isCountingDown = false;
-  Timer? _timer;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -43,33 +40,6 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-  }
-
-  void _startSOSCountdown(BuildContext context) {
-    setState(() {
-      _isCountingDown = true;
-      _countdown = 3;
-    });
-
-    HapticFeedback.mediumImpact();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown == 1) {
-        timer.cancel();
-        HapticFeedback.heavyImpact();
-
-        PhoneService.call('112');
-
-        setState(() {
-          _isCountingDown = false;
-        });
-      } else {
-        setState(() {
-          _countdown--;
-        });
-        HapticFeedback.selectionClick();
-      }
-    });
   }
 
   @override
@@ -103,7 +73,7 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                   width: double.infinity,
                   height: 72,
                   child: ElevatedButton(
-                    onPressed: widget.isActive || _isCountingDown
+                    onPressed: widget.isActive
                         ? null
                         : () {
                       showDialog(
@@ -115,7 +85,8 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                           ),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () =>
+                                  Navigator.pop(context),
                               child: const Text('Abbrechen'),
                             ),
                             ElevatedButton(
@@ -124,7 +95,8 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                               ),
                               onPressed: () {
                                 Navigator.pop(context);
-                                _startSOSCountdown(context);
+                                HapticFeedback.heavyImpact();
+                                PhoneService.call('112');
                               },
                               child: const Text('SOS starten'),
                             ),
@@ -136,7 +108,8 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                       backgroundColor: const Color(0xFFE53935),
                       foregroundColor: Colors.white,
                       elevation: 8,
-                      shadowColor: const Color(0xFFE53935).withOpacity(0.5),
+                      shadowColor:
+                      const Color(0xFFE53935).withOpacity(0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(36),
                       ),
@@ -145,20 +118,14 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          _isCountingDown
-                              ? Icons.timer
-                              : widget.isActive
+                          widget.isActive
                               ? Icons.check_circle
                               : Icons.warning,
                           size: 32,
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          _isCountingDown
-                              ? 'Notruf in $_countdown…'
-                              : widget.isActive
-                              ? 'Notruf aktiv'
-                              : 'SOS',
+                          widget.isActive ? 'Notruf aktiv' : 'SOS',
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -166,7 +133,6 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                         ),
                       ],
                     ),
-
                   ),
                 ),
               );

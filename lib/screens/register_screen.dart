@@ -118,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
 
                 Text(
-                  'Willkommen bei AsthmaCare',
+                  'Willkommen bei AsthmaAssist',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,

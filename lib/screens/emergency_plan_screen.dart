@@ -346,7 +346,9 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
         ),
       ),
       bottomNavigationBar: FloatingSOSButton(
-        onPressed: () {},
+        onPressed: () {
+          PhoneService.call('112');
+        },
       ),
     );
   }
