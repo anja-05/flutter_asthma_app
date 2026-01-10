@@ -3,13 +3,13 @@ import '../common/app_card.dart';
 
 class PollenCard extends StatelessWidget {
   final Map<String, int> pollenLevels;
-  final String location;
+  final String? location;
   final VoidCallback? onTap;
 
   const PollenCard({
     super.key,
     required this.pollenLevels,
-    required this.location,
+    this.location,
     this.onTap,
   });
 
@@ -102,23 +102,24 @@ class PollenCard extends StatelessWidget {
                         color: Color(0xFF212121),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 14,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          location,
-                          style: TextStyle(
-                            fontSize: 14,
+                    if (location != null && location!.isNotEmpty)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 14,
                             color: Colors.grey[600],
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 4),
+                          Text(
+                            location!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),

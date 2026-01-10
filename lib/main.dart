@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
@@ -24,6 +25,8 @@ import 'screens/main_shell.dart';
 // Fitbit (bleibt unberührt)
 import 'package:fitbitter/fitbitter.dart';
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -34,6 +37,11 @@ void main() async {
 
   /// 🔹 Lokalisierung
   await initializeDateFormatting('de_DE', null);
+
+  /// 🔹 Benachrichtigungen initialisieren
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   runApp(const AsthmaApp());
 }

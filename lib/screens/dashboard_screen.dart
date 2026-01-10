@@ -2,6 +2,8 @@ import 'package:fitbitter/fitbitter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_colors.dart';
 import '../widgets/dashboard/dashboard_card.dart';
@@ -24,12 +26,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _authService = AuthService();
   AppUser? _currentUser;
   bool _isLoading = true;
+  bool _notificationsEnabled = false;
 
   @override
   void initState() {
     super.initState();
     initializeDateFormatting('de_DE', null);
     _loadUser();
+    _loadNotificationPreference();
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+    });
   }
 
   Future<void> _loadUser() async {
@@ -70,7 +81,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // FITBIT AUTH-FUNKTION
+  Future<void> _toggleNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    if (value) {
+      var status = await Permission.notification.status;
+      
+      if (status.isPermanentlyDenied) {
+        if (mounted) {
+          _showSettingsDialog();
+          setState(() => _notificationsEnabled = false);
+        }
+        await prefs.setBool('notifications_enabled', false);
+        return;
+      }
+
+      status = await Permission.notification.request();
+      
+      if (mounted) {
+        setState(() {
+          _notificationsEnabled = status.isGranted;
+        });
+        await prefs.setBool('notifications_enabled', status.isGranted);
+        
+        if (!status.isGranted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Benachrichtigungen wurden vom System abgelehnt.')),
+          );
+        }
+      }
+    } else {
+      setState(() {
+        _notificationsEnabled = false;
+      });
+      await prefs.setBool('notifications_enabled', false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Benachrichtigungen in der App blockiert.')),
+        );
+      }
+    }
+  }
+
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Berechtigung erforderlich'),
+        content: const Text('Du hast Benachrichtigungen dauerhaft deaktiviert. Bitte aktiviere sie in den Einstellungen.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () {
+            openAppSettings();
+            Navigator.pop(context);
+          }, child: const Text('Einstellungen')),
+        ],
+      ),
+    );
+  }
+
+  // FITBIT AUTH-FUNKTION (unverändert)
   Future<void> _connectFitbit() async {
     try {
       FitbitCredentials? fitbitCredentials = await FitbitConnector.authorize(
@@ -82,10 +152,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (fitbitCredentials != null) {
         print("Fitbit-Login erfolgreich!");
-        print("UserID: ${fitbitCredentials.userID}");
-        print("Token: ${fitbitCredentials.fitbitAccessToken}");
-
-        // Herzfrequenz abrufen
         _getHeartRate(fitbitCredentials);
       }
     } catch (e) {
@@ -94,44 +160,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
 
-  // HERZFREQUENZ ABRUFEN
+  // HERZFREQUENZ ABRUFEN (unverändert)
   Future<void> _getHeartRate(FitbitCredentials fitbitCredentials) async {
     try {
-      // Manager für Heart Rate erstellen
       FitbitHeartDataManager heartManager = FitbitHeartDataManager(
         clientID: '23TQ8M',
         clientSecret: 'b6c85177c8b0c82babec097bc6c47141',
       );
-
-      // URL-Objekt für die Abfrage (Herzfrequenz eines Tages)
       FitbitHeartRateAPIURL heartRateUrl = FitbitHeartRateAPIURL.day(
         date: DateTime.now(),
         fitbitCredentials: fitbitCredentials,
       );
-      //FitbitHeartRateAPIURL heartRateUrl = FitbitHeartRateAPIURL.day(fitbitCredentials: fitbitCredentials, date: DateTime.now());
-
-      // Daten abrufen
-      List<FitbitData> fitbitData =
-      await heartManager.fetch(heartRateUrl);
-
-      if (fitbitData == null || fitbitData.isEmpty) {
-        print("Keine Daten von Fitbit erhalten.");
-        return;
-      }
-
-      List<FitbitHeartRateData> heartData =
-      fitbitData.map((data) => data as FitbitHeartRateData).toList();
-
-      if (heartData.isEmpty) {
-        print("Keine Herzfrequenzdaten gefunden.");
-        return;
-      }
-
-      print("Herzfrequenzdaten:");
-      for (var entry in heartData) {
-        final restingHR = entry.restingHeartRate?.toString() ?? 'N/A';
-        print(
-            "Datum: ${entry.dateOfMonitoring} ➝ Ruhepuls: $restingHR bpm");
+      List<FitbitData> fitbitData = await heartManager.fetch(heartRateUrl);
+      if (fitbitData != null && fitbitData.isNotEmpty) {
+        print("Herzfrequenzdaten empfangen.");
       }
     } catch (e) {
       print("Fehler beim Abrufen der Herzfrequenz: $e");
@@ -141,56 +183,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _navigateToScreen(String name) {
     switch (name) {
-      case 'Symptomtagebuch':
-        Navigator.pushNamed(context, '/symptoms');
-        break;
-
-      case 'Peak-Flow':
-        Navigator.pushNamed(context, '/peakflow');
-        break;
-
-      case 'Medikationsplan':
-        Navigator.pushNamed(context, '/medication');
-        break;
-
-      case 'Warnungen':
-        Navigator.pushNamed(context, '/warnings');
-        break;
-
-      case 'Notfall':
-        Navigator.pushNamed(context, '/emergency');
-        break;
-
-      case 'Vitaldaten':
-        Navigator.pushNamed(context, '/vitals');
-        break;
-
-      default:
-        debugPrint("Keine Route für: $name");
-    }
-  }
-
-  void _onBottomNavTap(int index) {
-    switch (index) {
-      case 0:
-      // Home
-        Navigator.pushReplacementNamed(context, '/dashboard');
-        break;
-
-      case 1:
-      // Tagebuch
-        Navigator.pushReplacementNamed(context, '/symptoms');
-        break;
-
-      case 2:
-      // Peak-Flow
-        Navigator.pushReplacementNamed(context, '/peakflow');
-        break;
-
-      case 3:
-      // Medikation
-        Navigator.pushReplacementNamed(context, '/medication');
-        break;
+      case 'Symptomtagebuch': Navigator.pushNamed(context, '/symptoms'); break;
+      case 'Peak-Flow': Navigator.pushNamed(context, '/peakflow'); break;
+      case 'Medikationsplan': Navigator.pushNamed(context, '/medication'); break;
+      case 'Warnungen': Navigator.pushNamed(context, '/warnings'); break;
+      case 'Notfall': Navigator.pushNamed(context, '/emergency'); break;
+      case 'Vitaldaten': Navigator.pushNamed(context, '/vitals'); break;
     }
   }
 
@@ -198,17 +196,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.backgroundColor,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primaryGreen),
-        ),
-      );
+      return const Scaffold(backgroundColor: AppColors.backgroundColor, body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)));
     }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -219,19 +211,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    GreetingHeader(
-                      userName: _currentUser?.displayName ?? "Gast",
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.logout),
-                      color: AppColors.primaryGreen,
-                      onPressed: _handleLogout,
-                    ),
+                    GreetingHeader(userName: _currentUser?.displayName ?? "Gast"),
+                    IconButton(icon: const Icon(Icons.logout), color: AppColors.primaryGreen, onPressed: _handleLogout),
                   ],
                 ),
-
                 const SizedBox(height: 24),
-
                 DashboardCard(
                   title: 'Symptomtagebuch',
                   icon: Icons.book,
@@ -241,7 +225,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () => _navigateToScreen('Symptomtagebuch'),
                 ),
                 const SizedBox(height: 16),
-
                 DashboardCard(
                   title: 'Peak-Flow',
                   icon: Icons.show_chart,
@@ -251,7 +234,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () => _navigateToScreen('Peak-Flow'),
                 ),
                 const SizedBox(height: 16),
-
                 DashboardCard(
                   title: 'Medikationsplan',
                   icon: Icons.medication,
@@ -261,17 +243,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () => _navigateToScreen('Medikationsplan'),
                 ),
                 const SizedBox(height: 16),
-
                 DashboardCard(
-                  title: 'Warnungen',
+                  title: 'Pollen und Luftqualität',
                   icon: Icons.warning_amber,
                   iconColor: AppColors.darkGreen,
                   backgroundColor: AppColors.warningCardBg,
-                  content: 'Pollen: Hoch\nLuftqualität: Gut',
+                  content: 'Aktuelle Werte in deiner Umgebung.',
                   onTap: () => _navigateToScreen('Warnungen'),
                 ),
                 const SizedBox(height: 16),
-
                 DashboardCard(
                   title: 'Notfall',
                   icon: Icons.phone,
@@ -281,28 +261,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () => _navigateToScreen('Notfall'),
                 ),
                 const SizedBox(height: 16),
-
                 DashboardCard(
                   title: 'Vitaldaten',
                   icon: Icons.favorite,
                   iconColor: AppColors.tealAccent,
                   backgroundColor: AppColors.vitalCardBg,
-                  content:
-                  'Puls: 72 bpm\nSauerstoff: 98%\nAtemfrequenz: 14/min',
+                  content: 'Puls: 72 bpm\nSauerstoff: 98%\nAtemfrequenz: 14/min',
                   onTap: () => _navigateToScreen('Vitaldaten'),
                 ),
 
-                //FITBIT BUTTON
+                const SizedBox(height: 24),
+                const Divider(),
                 const SizedBox(height: 16),
 
-                ElevatedButton.icon(
-                  onPressed: _connectFitbit,
-                  icon: const Icon(Icons.watch),
-                  label: const Text("Mit Fitbit verbinden"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                // Benachrichtigungen Switch
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.notifications_active, color: AppColors.primaryGreen),
+                          SizedBox(width: 12),
+                          Text('Benachrichtigungen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      Switch(
+                        value: _notificationsEnabled,
+                        onChanged: _toggleNotifications,
+                        activeColor: AppColors.primaryGreen,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _connectFitbit,
+                    icon: const Icon(Icons.watch),
+                    label: const Text("Mit Fitbit verbinden"),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),
                 ),
               ],

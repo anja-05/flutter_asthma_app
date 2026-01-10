@@ -3,7 +3,6 @@ import '../common/app_card.dart';
 
 class AqiCard extends StatelessWidget {
   final int aqiValue;
-  final String location;
   final String category;
   final String? recommendation;
   final VoidCallback? onTap;
@@ -11,7 +10,6 @@ class AqiCard extends StatelessWidget {
   const AqiCard({
     super.key,
     required this.aqiValue,
-    required this.location,
     required this.category,
     this.recommendation,
     this.onTap,
@@ -65,35 +63,13 @@ class AqiCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Luftqualität',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF212121),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 14,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          location,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                child: Text(
+                  'Luftqualität',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF212121),
+                  ),
                 ),
               ),
             ],
