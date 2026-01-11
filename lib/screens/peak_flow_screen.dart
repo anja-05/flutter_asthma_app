@@ -6,7 +6,9 @@ import '../widgets/peak_flow/peak_flow_chart.dart';
 import '../widgets/peak_flow/peak_flow_meter.dart';
 import '../widgets/peak_flow/zone_indicator.dart';
 import '../constants/app_colors.dart';
-
+/// Der Screen ist nur ein Beispiel wie er einmal auschauen könnte.
+/// Er ist nicht fertig impplementiert.
+/// Er dient nur zur Veranschaulichung
 class PeakFlowScreen extends StatefulWidget {
   const PeakFlowScreen({super.key});
 
@@ -79,7 +81,6 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
         child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
     children: [
-          // ✅ Header im gleichen Stil wie Symptomtagebuch
           const Text(
             'Peak-Flow Messungen',
             style: TextStyle(
@@ -106,16 +107,14 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(width: 6),
-              const Icon(Icons.wb_sunny, color: Colors.orangeAccent, size: 18),
             ],
           ),
           const SizedBox(height: 24),
 
-          // ... dann folgen PeakFlowMeter, Chart usw.
+          // dann könnten PeakFlowMeter, Chart usw. folgen
 
 
-          // ✅ Aktuelle Messung
+          // Aktuelle Messung
           PeakFlowMeter(
             currentValue: latest.value.toDouble(),
             personalBest: latest.personalBest.toDouble(),
@@ -124,7 +123,7 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
 
           const SizedBox(height: 24),
 
-          // ✅ Verlauf als Chart
+          // Verlauf als Chart
           PeakFlowChart(
             data: measurements
                 .map(
@@ -140,7 +139,7 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
 
           const SizedBox(height: 32),
 
-          // ✅ Zonen-Info
+          // Zonen-Info
           _buildZoneExplanation(),
         ],
       ),

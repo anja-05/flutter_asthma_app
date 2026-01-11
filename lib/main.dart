@@ -22,7 +22,7 @@ import 'screens/warnings_screen.dart';
 import 'screens/fhir_observation_screen.dart';
 import 'screens/main_shell.dart';
 
-// Fitbit (bleibt unberührt)
+// Fitbit
 import 'package:fitbitter/fitbitter.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -30,15 +30,15 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  /// 🔹 Firebase initialisieren (Backend)
+  /// Firebase initialisieren (Backend)
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  /// 🔹 Lokalisierung
+  /// Lokalisierung
   await initializeDateFormatting('de_DE', null);
 
-  /// 🔹 Benachrichtigungen initialisieren
+  /// Benachrichtigungen initialisieren
   const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
   const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
@@ -63,7 +63,7 @@ class AsthmaApp extends StatelessWidget {
         ),
       ),
 
-      /// 🔹 Zentrale Routen (unverändert)
+      /// Zentrale Routen (unverändert)
       routes: {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const DashboardScreen(),
@@ -77,13 +77,13 @@ class AsthmaApp extends StatelessWidget {
         '/fhir': (context) => const FhirObservationScreen(),
       },
 
-      /// 🔹 Einstiegspunkt abhängig vom Firebase-Auth-Status
+      /// Einstiegspunkt abhängig vom Firebase-Auth-Status
       home: const AuthWrapper(),
     );
   }
 }
 
-/// 🔐 Entscheidet automatisch Login vs. Dashboard
+/// Entscheidet automatisch Login vs. Dashboard
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
@@ -92,19 +92,16 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder(
       stream: AuthService().authStateChanges,
       builder: (context, snapshot) {
-        // 🔄 Ladezustand
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // ✅ Eingeloggt → Dashboard
         if (snapshot.hasData) {
           return const MainShell();
         }
 
-        // ❌ Nicht eingeloggt → Login
         return const LoginScreen();
       },
     );

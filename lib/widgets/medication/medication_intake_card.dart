@@ -1,4 +1,3 @@
-// lib/widgets/medication/medication_intake_card.dart
 import 'package:flutter/material.dart';
 import '../../models/medication.dart';
 import '../common/app_card.dart';
@@ -8,7 +7,7 @@ class MedicationIntakeCard extends StatelessWidget {
   final MedicationIntake intake;
   final VoidCallback onMarkAsTaken;
   final VoidCallback? onTap;
-  final VoidCallback? onDelete; // NEU: Callback für Löschen
+  final VoidCallback? onDelete;
 
   const MedicationIntakeCard({
     Key? key,
@@ -29,7 +28,6 @@ class MedicationIntakeCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ICON-KREIS
           Container(
             width: 42,
             height: 42,

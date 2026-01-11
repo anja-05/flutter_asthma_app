@@ -1,4 +1,3 @@
-// lib/widgets/medication/medication_card.dart
 import 'package:flutter/material.dart';
 import '../../models/medication.dart';
 import '../common/app_card.dart';

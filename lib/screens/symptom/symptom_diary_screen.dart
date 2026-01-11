@@ -121,7 +121,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
                     Text(
                       'Symptomtagebuch',
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primaryGreen,
                       ),
@@ -131,7 +131,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
                       'Verfolge deine Lungenfunktion und erkenne Veränderungen frühzeitig.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -142,7 +142,10 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
                             'EEEE, d. MMMM yyyy',
                             'de_DE',
                           ).format(DateTime.now()),
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         const SizedBox(width: 6),
                         const Icon(

@@ -147,8 +147,8 @@ class PeakFlowChart extends StatelessWidget {
                 ],
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
-                    tooltipPadding: EdgeInsets.all(8), // Passen Sie den Innenabstand des Tooltips an
-                    tooltipBorderRadius: BorderRadius.circular(8), // Rundet die Ecken des Tooltips
+                    tooltipPadding: EdgeInsets.all(8),
+                    tooltipBorderRadius: BorderRadius.circular(8),
                     getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                       return touchedBarSpots.map((barSpot) {
                         return LineTooltipItem(

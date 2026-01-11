@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../common/app_card.dart'; // Passe den Pfad ggf. an
+import '../common/app_card.dart';
 
 class VitalChart extends StatelessWidget {
   final String title;

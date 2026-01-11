@@ -1,6 +1,5 @@
 import 'package:fitbitter/fitbitter.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_colors.dart';
 import '../widgets/dashboard/dashboard_card.dart';
 import '../widgets/dashboard/greeting_header.dart';
-import '../widgets/common/bottom_navigation.dart';
 
 import '../services/auth_service.dart';
 import '../models/user.dart';
@@ -140,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // FITBIT AUTH-FUNKTION (unverändert)
+  // FITBIT AUTH-FUNKTION
   Future<void> _connectFitbit() async {
     try {
       FitbitCredentials? fitbitCredentials = await FitbitConnector.authorize(
@@ -160,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
 
-  // HERZFREQUENZ ABRUFEN (unverändert)
+  // HERZFREQUENZ ABRUFEN
   Future<void> _getHeartRate(FitbitCredentials fitbitCredentials) async {
     try {
       FitbitHeartDataManager heartManager = FitbitHeartDataManager(
@@ -244,11 +242,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 16),
                 DashboardCard(
-                  title: 'Pollen und Luftqualität',
+                  title: 'Warnungen',
                   icon: Icons.warning_amber,
                   iconColor: AppColors.darkGreen,
                   backgroundColor: AppColors.warningCardBg,
-                  content: 'Aktuelle Werte in deiner Umgebung.',
+                  content: 'Pollen & Luftqualität\nAktuelle Werte anzeigen',
                   onTap: () => _navigateToScreen('Warnungen'),
                 ),
                 const SizedBox(height: 16),
@@ -274,7 +272,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const Divider(),
                 const SizedBox(height: 16),
 
-                // Benachrichtigungen Switch
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(

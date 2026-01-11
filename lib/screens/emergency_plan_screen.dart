@@ -294,13 +294,19 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Im Notfall schnell handeln – dein persönlicher Plan und SOS-Kontakte.',
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
                     .format(DateTime.now()),
-                style: const TextStyle(fontSize: 14),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 24),
 

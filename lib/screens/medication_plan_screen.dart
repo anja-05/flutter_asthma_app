@@ -11,7 +11,6 @@ import '../../services/medication_service.dart';
 
 const Uuid uuid = Uuid();
 
-// --- ZUSÄTZLICHE KLASSE: DIALOG FÜR DIE EINGABE (Unverändert) ---
 class _AddMedicationDialog extends StatefulWidget {
   final Function(Medication) onAdd;
 
@@ -162,8 +161,6 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
     );
   }
 }
-// --- ENDE DIALOG KLASSE ---
-
 
 class MedicationScreen extends StatefulWidget {
   const MedicationScreen({super.key});
@@ -188,15 +185,12 @@ class _MedicationScreenState extends State<MedicationScreen> {
     _loadMedications();
   }
 
-  // Funktion zur Überprüfung, ob ein Tageswechsel stattgefunden hat
   bool _isNewDay(DateTime? lastAccess) {
     if (lastAccess == null) return true;
     final now = DateTime.now();
-    // Prüfen, ob das Jahr, der Monat oder der Tag anders ist
     return now.year != lastAccess.year || now.month != lastAccess.month || now.day != lastAccess.day;
   }
 
-  // Funktion, die die Pläne in tägliche Einnahme-Einträge umwandelt
   List<MedicationIntake> _generateTodayIntakes(List<Medication> plans) {
     final allIntakes = plans.expand((plan) {
       return plan.times.map((time) {
@@ -215,7 +209,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
     return allIntakes;
   }
 
-  // Ladefunktion (für Persistenz)
   Future<void> _loadMedications() async {
     final loadedPlans = await _service.loadMedications();
     final loadedRemindersStatus = await _service.loadRemindersStatus();
@@ -225,11 +218,9 @@ class _MedicationScreenState extends State<MedicationScreen> {
     List<MedicationIntake> currentIntakes;
 
     if (_isNewDay(lastAccess)) {
-      // Neuer Tag: Generiere Intakes neu (alle sind *nicht* genommen)
       currentIntakes = _generateTodayIntakes(loadedPlans);
-      await _service.saveTodayIntakes(currentIntakes); // Speichere den neuen Tagesplan
+      await _service.saveTodayIntakes(currentIntakes);
     } else {
-      // Gleicher Tag: Lade den gespeicherten Zustand der Intakes
       currentIntakes = await _service.loadTodayIntakes();
 
       // OPTIMIERUNG: Falls sich die Pläne geändert haben (durch Löschen/Hinzufügen),
@@ -245,13 +236,11 @@ class _MedicationScreenState extends State<MedicationScreen> {
       }
     }
 
-    // Speichere das aktuelle Zugriffsdatum für den nächsten Start
     await _service.saveLastAccessedDate();
 
     setState(() {
       _medicationPlans = loadedPlans;
       _allTodayIntakesWithStatus = currentIntakes;
-      // Filter: Nur die, die NICHT genommen wurden, sind heute relevant
       _todayIntakes = currentIntakes.where((i) => !i.taken).toList();
       _pastIntakes = loadedPastIntakes;
       _remindersEnabled = loadedRemindersStatus;
@@ -259,33 +248,23 @@ class _MedicationScreenState extends State<MedicationScreen> {
     });
   }
 
-  // KORRIGIERT: Fügt nur das NEUE Medikament zur bestehenden Intakes-Liste hinzu
   void _addNewPlan(Medication newMedication) async {
-    // 1. Füge das neue Medikament zur Plan-Liste hinzu
     final updatedPlans = [..._medicationPlans, newMedication];
-
-    // 2. Erstelle die Intakes nur für das NEUE Medikament (alle sind 'taken: false')
     final newIntakesForToday = _generateTodayIntakes([newMedication]);
-
-    // 3. Kombiniere die neuen Intakes mit den bestehenden Intakes, die den Status halten
-    // Wichtig: _allTodayIntakesWithStatus enthält den aktuellen "taken" Status
     final combinedIntakes = [..._allTodayIntakesWithStatus, ...newIntakesForToday];
 
-    // 4. Speichere den aktualisierten Plan und die COMBINED Intakes
     await _service.saveMedications(updatedPlans);
     await _service.saveTodayIntakes(combinedIntakes);
 
     setState(() {
       _medicationPlans = updatedPlans;
       _allTodayIntakesWithStatus = combinedIntakes;
-      // 5. Aktualisiere die gefilterte Liste für die Anzeige
       _todayIntakes = combinedIntakes.where((i) => !i.taken).toList();
     });
 
     _showSnackBar('Medikament ${newMedication.name} hinzugefügt!');
   }
 
-  // Löscht einen Einnahme-Eintrag und den dazugehörigen Plan
   void _deleteIntakeAndPlan(String intakeId) async {
     final allTodayIntakes = _allTodayIntakesWithStatus;
 
@@ -294,25 +273,21 @@ class _MedicationScreenState extends State<MedicationScreen> {
 
     final medicationName = intakeToDelete.name;
 
-    // 2. Entferne den zugehörigen Plan
     final updatedPlans = _medicationPlans.where((p) => p.name != medicationName).toList();
     await _service.saveMedications(updatedPlans);
 
-    // 3. Entferne alle heutigen Intake-Einträge des Plans
     final updatedIntakes = allTodayIntakes.where((i) => i.name != medicationName).toList();
     await _service.saveTodayIntakes(updatedIntakes);
 
     setState(() {
       _medicationPlans = updatedPlans;
       _allTodayIntakesWithStatus = updatedIntakes;
-      // Zeige nur die nicht genommenen an
       _todayIntakes = updatedIntakes.where((i) => !i.taken).toList();
     });
 
     _showSnackBar('Medikament "${medicationName}" gelöscht.');
   }
 
-  // Schaltet den Erinnerungs-Status um
   void _toggleReminders(bool value) async {
     setState(() {
       _remindersEnabled = value;
@@ -321,9 +296,7 @@ class _MedicationScreenState extends State<MedicationScreen> {
     _showSnackBar('Erinnerungen ${value ? "aktiviert" : "deaktiviert"}.');
   }
 
-  // Funktion zum Markieren als genommen und Verschieben
   void _markAsTaken(MedicationIntake intake) async {
-    // 1. PastIntake Eintrag erstellen
     final pastIntake = PastMedicationIntake(
       id: uuid.v4(),
       name: intake.name,
@@ -332,22 +305,18 @@ class _MedicationScreenState extends State<MedicationScreen> {
       dateTime: DateTime.now(),
     );
 
-    // 2. Aktualisiere den Status in der vollen Liste
     final int indexToUpdate = _allTodayIntakesWithStatus.indexWhere((i) => i.id == intake.id);
     if (indexToUpdate != -1) {
       _allTodayIntakesWithStatus[indexToUpdate] = intake.markAsTaken();
     }
 
-    // 3. Speichere den neuen Status der Intakes und der Historie
     await _service.saveTodayIntakes(_allTodayIntakesWithStatus);
     final updatedPastIntakes = [pastIntake, ..._pastIntakes];
     await _service.savePastIntakes(updatedPastIntakes);
 
     setState(() {
-      // 4. Entferne den Eintrag aus der gefilterten Liste im State (er verschwindet)
       _todayIntakes.removeWhere((i) => i.id == intake.id);
 
-      // 5. Aktualisiere die Historie
       _pastIntakes = updatedPastIntakes;
     });
 
@@ -367,7 +336,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
     );
   }
 
-  // --- BUILD METHODE ---
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -385,7 +353,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
             children: [
-              // ... (Überschriften und Datum)
               const Text(
                 'Medikationsplan',
                 style: TextStyle(
@@ -423,7 +390,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Liste heutiger Einnahmen
               if (_todayIntakes.isEmpty)
                 const Center(child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -443,7 +409,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
 
               const SizedBox(height: 12),
 
-              // Button hinzufügen
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -463,7 +428,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
 
               const SizedBox(height: 24),
 
-              // Erinnerungen CONTAINER
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.lightGreen.withOpacity(0.15),
@@ -509,7 +473,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Vergangene Einnahmen
               if (_pastIntakes.isEmpty)
                 const Center(child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 20.0),

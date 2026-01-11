@@ -4,8 +4,8 @@ import '../constants/app_colors.dart';
 class PeakFlowMeasurement {
   final String id;
   final DateTime dateTime;
-  final int value; // in l/min
-  final int personalBest; // Persönlicher Bestwert
+  final int value;
+  final int personalBest;
   final String? notes;
 
   PeakFlowMeasurement({

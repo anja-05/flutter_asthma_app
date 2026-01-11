@@ -1,4 +1,3 @@
-// lib/models/medication.dart
 import 'package:uuid/uuid.dart';
 
 const Uuid uuid = Uuid();
@@ -7,7 +6,7 @@ class Medication {
   final String id;
   final String name;
   final String dosage;
-  final String type; // Inhalator, Tablette, Spray
+  final String type;
   final List<String> times;
 
   Medication({
@@ -106,7 +105,7 @@ class PastMedicationIntake {
     'name': name,
     'dosage': dosage,
     'type': type,
-    'dateTime': dateTime.toIso8601String(), // Speichere Datum als String
+    'dateTime': dateTime.toIso8601String(),
   };
 
   factory PastMedicationIntake.fromJson(Map<String, dynamic> json) {

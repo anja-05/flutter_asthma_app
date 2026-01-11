@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/app_colors.dart';
 import '../widgets/warnings/aqi_card.dart';
 import '../widgets/warnings/pollen_card.dart';
 import '../widgets/warnings/warning_banner.dart';
@@ -33,7 +34,6 @@ class _WarningScreenState extends State<WarningScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final pos = await _determinePos();
-      // Wir fragen 7 Tage ab, um sicherzustellen, dass Tag 5 vollstaendig ist
       final raw = await http.get(Uri.parse('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${pos.latitude}&longitude=${pos.longitude}&current=european_aqi,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen,alder_pollen,mugwort_pollen&hourly=european_aqi,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen,alder_pollen,mugwort_pollen&timezone=auto&forecast_days=7'));
 
       if (raw.statusCode != 200) throw Exception('API Error: ${raw.statusCode}');
@@ -66,7 +66,7 @@ class _WarningScreenState extends State<WarningScreen> {
     final totalHours = timeList.length;
 
     double chunkMax(int startIdx, List<String> keys) {
-      double maxVal = -1.0; // Start bei -1 um echte 0 von fehlenden Daten zu unterscheiden
+      double maxVal = -1.0;
       for (int i = startIdx; i < startIdx + 24 && i < totalHours; i++) {
         for (var k in keys) {
           if (h[k] != null && i < (h[k] as List).length) {
@@ -79,11 +79,9 @@ class _WarningScreenState extends State<WarningScreen> {
     }
 
     List<dynamic> daily = [];
-    // Start bei Index 24 (morgen)
     for (int i = 24; i < totalHours && daily.length < 5; i += 24) {
       final aqi = chunkMax(i, ['european_aqi']).toInt();
-      
-      // Fallback: Wenn AQI 0 ist (Datenluecke), nimm den Wert vom Vortag oder vom aktuellen Zeitpunkt
+
       int finalAqi = aqi;
       if (aqi == 0 && daily.isNotEmpty) {
         finalAqi = daily.last['AQI'];
@@ -120,7 +118,7 @@ class _WarningScreenState extends State<WarningScreen> {
   Future<void> _showNotification() async {
     final prefs = await SharedPreferences.getInstance();
     final bool isEnabledInApp = prefs.getBool('notifications_enabled') ?? false;
-    
+
     if (!isEnabledInApp) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Benachrichtigungen sind in der App blockiert.')));
       return;
@@ -158,9 +156,25 @@ class _WarningScreenState extends State<WarningScreen> {
               : ListView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
             children: [
-              const Text('Standortbasierte Warnungen', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF388E3C))),
+              const Text(
+                'Warnungen',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+              ),
               const SizedBox(height: 8),
-              Text('Heute: $today', style: const TextStyle(color: Color(0xFF616161))),
+
+              const Text(
+                'Hier findest du aktuelle Warnungen zur Luftqualität und Pollenbelastung in deiner Region.',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 8),
+
+              Text(
+                DateFormat('EEEE, d. MMMM', 'de_DE').format(DateTime.now()),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
               const SizedBox(height: 24),
               if (aqi > 60) WarningBanner(
                 title: aqi > 80 ? 'Hohe Belastung' : 'Mäßige Belastung',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../constants/app_colors.dart';
 import '../widgets/common/app_card.dart';
 import '../widgets/vitals/vital_value_card.dart';
 import '../widgets/vitals/vital_chart.dart';
@@ -47,23 +48,21 @@ class _VitalScreenState extends State<VitalScreen> {
         style: TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF388E3C),
+        color: AppColors.primaryGreen,
         ),
         ),
         const SizedBox(height: 8),
         const Text(
         'Erfasse oder synchronisiere deine Vitalwerte und behalte deinen Verlauf im Blick.',
-        style: TextStyle(fontSize: 14, color: Color(0xFF616161)),
+        style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 8),
         Row(
         children: [
         Text(
         today,
-        style: const TextStyle(fontSize: 14, color: Color(0xFF616161)),
+        style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
-        const SizedBox(width: 6),
-        const Icon(Icons.wb_sunny, color: Colors.orangeAccent, size: 18),
         ],
         ),
         const SizedBox(height: 24),
@@ -124,7 +123,6 @@ class _VitalScreenState extends State<VitalScreen> {
 
           const SizedBox(height: 24),
 
-          // ✅ Verlauf-Überschrift
           const Text(
             'Verlauf',
             style: TextStyle(
@@ -135,7 +133,6 @@ class _VitalScreenState extends State<VitalScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ✅ Tab-Auswahl
           Container(
             height: 40,
             decoration: BoxDecoration(
@@ -172,7 +169,6 @@ class _VitalScreenState extends State<VitalScreen> {
 
           const SizedBox(height: 16),
 
-          // ✅ Diagramm
           VitalChart(
             title: tabs[selectedTabIndex],
             data: heartRateData,
@@ -188,7 +184,6 @@ class _VitalScreenState extends State<VitalScreen> {
 
           const SizedBox(height: 24),
 
-          // ✅ Verlaufsliste
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -214,7 +209,6 @@ class _VitalScreenState extends State<VitalScreen> {
 
           const SizedBox(height: 24),
 
-          // ✅ Button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -236,7 +230,6 @@ class _VitalScreenState extends State<VitalScreen> {
     ));
   }
 
-  // ✅ Verlaufseintrag Widget
   Widget _buildHistoryTile(VitalEntry entry) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -285,7 +278,6 @@ class _VitalScreenState extends State<VitalScreen> {
   }
 }
 
-// 📦 Datenmodell Verlauf
 class VitalEntry {
   final String date;
   final String time;

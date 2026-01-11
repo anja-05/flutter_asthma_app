@@ -40,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (user != null) {
-      // Login erfolgreich - navigiere zum Dashboard
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -49,7 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } else {
-      // Login fehlgeschlagen
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -119,7 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 48),
 
-                // Login Karte
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -145,7 +142,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           const SizedBox(height: 24),
 
-                          // E-Mail Feld
                           TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -189,7 +185,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           const SizedBox(height: 16),
 
-                          // Passwort Feld
                           TextFormField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
@@ -248,7 +243,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           const SizedBox(height: 16),
 
-                          // Anmelden Button
                           ElevatedButton(
                             onPressed: _isLoading ? null : _handleLogin,
                             style: ElevatedButton.styleFrom(
@@ -285,7 +279,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 24),
 
-                // Trennlinie
                 Row(
                   children: [
                     Expanded(child: Divider(color: AppColors.textSecondary.withOpacity(0.3))),
@@ -305,7 +298,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 24),
 
-                // Registrieren Text und Button
                 Text(
                   'Noch kein Konto?',
                   style: TextStyle(
@@ -343,7 +335,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 32),
 
-                // Datenschutz Text
                 Text(
                   'Mit deiner Anmeldung stimmst du unseren\nDatenschutzrichtlinien zu.',
                   textAlign: TextAlign.center,

@@ -22,7 +22,6 @@ class GreetingHeader extends StatelessWidget {
   }
 
   String _getWeatherEmoji() {
-    // Simplified - in real app, get from weather API
     final hour = DateTime.now().hour;
     if (hour >= 6 && hour < 20) {
       return '☀️';

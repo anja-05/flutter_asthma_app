@@ -1,9 +1,9 @@
 class VitalData {
   final String id;
   final DateTime dateTime;
-  final int? heartRate; // Puls in bpm
-  final int? oxygenSaturation; // SpO2 in %
-  final int? respiratoryRate; // Atemfrequenz in /min
+  final int? heartRate;
+  final int? oxygenSaturation;
+  final int? respiratoryRate;
 
   VitalData({
     required this.id,

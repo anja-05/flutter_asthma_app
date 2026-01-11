@@ -1,4 +1,3 @@
-// lib/services/medication_service.dart
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/medication.dart';
@@ -10,7 +9,6 @@ class MedicationService {
   static const _keyPastIntakes = 'pastIntakeList';
   static const _keyLastAccessedDate = 'lastAccessedDate';
 
-  // --- Medication Plans ---
   Future<List<Medication>> loadMedications() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_keyMedications);
@@ -27,7 +25,6 @@ class MedicationService {
     await prefs.setString(_keyMedications, jsonString);
   }
 
-  // --- Reminders Status ---
   Future<bool> loadRemindersStatus() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyRemindersEnabled) ?? true;
@@ -38,7 +35,6 @@ class MedicationService {
     await prefs.setBool(_keyRemindersEnabled, isEnabled);
   }
 
-  // --- Einnahme Status heute (MedicationIntake) ---
   Future<List<MedicationIntake>> loadTodayIntakes() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_keyTodayIntakes);
@@ -56,7 +52,6 @@ class MedicationService {
     await prefs.setString(_keyTodayIntakes, jsonString);
   }
 
-  // --- Vergangene Einnahmen (PastMedicationIntake) ---
   Future<List<PastMedicationIntake>> loadPastIntakes() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_keyPastIntakes);
@@ -74,7 +69,6 @@ class MedicationService {
     await prefs.setString(_keyPastIntakes, jsonString);
   }
 
-  // --- Datum für Tageswechsel ---
   Future<DateTime?> loadLastAccessedDate() async {
     final prefs = await SharedPreferences.getInstance();
     final dateString = prefs.getString(_keyLastAccessedDate);

@@ -47,7 +47,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      // Registrierung erfolgreich
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -55,10 +54,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop(); // Zurück zum Login
+        Navigator.of(context).pop();
       }
     } else {
-      // Registrierung fehlgeschlagen
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -127,7 +125,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 32),
 
-                // Registrierungs Karte
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -140,7 +137,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Vorname
                           TextFormField(
                             controller: _firstNameController,
                             decoration: InputDecoration(
@@ -180,7 +176,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 16),
 
-                          // Nachname
                           TextFormField(
                             controller: _lastNameController,
                             decoration: InputDecoration(
@@ -220,7 +215,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 16),
 
-                          // E-Mail
                           TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -264,7 +258,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 16),
 
-                          // Passwort
                           TextFormField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
@@ -321,7 +314,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 16),
 
-                          // Passwort bestätigen
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirmPassword,
@@ -378,7 +370,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 24),
 
-                          // Registrieren Button
                           ElevatedButton(
                             onPressed: _isLoading ? null : _handleRegister,
                             style: ElevatedButton.styleFrom(
@@ -415,7 +406,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 24),
 
-                // Datenschutz Text
                 Text(
                   'Mit der Registrierung stimmst du unseren\nDatenschutzrichtlinien zu.',
                   textAlign: TextAlign.center,
