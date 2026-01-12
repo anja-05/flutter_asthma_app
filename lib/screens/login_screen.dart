@@ -4,20 +4,41 @@ import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
 
+/// Login-Screen der App.
+/// Dieser Screen ermöglicht bestehenden Benutzer:innen:
+/// - die Anmeldung mit E-Mail und Passwort
+/// - die Navigation zur Registrierung
+///
+/// Er übernimmt:
+/// - Formularvalidierung
+/// - Authentifizierung über [AuthService]
+/// - Weiterleitung zum [DashboardScreen] bei Erfolg
 class LoginScreen extends StatefulWidget {
+  /// Erstellt einen neuen [LoginScreen].
   const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+/// Zustandsklasse für den [LoginScreen].
+/// Verwaltet:
+/// - Eingabefelder (E-Mail, Passwort)
+/// - Ladezustand während des Logins
+/// - Passwort-Sichtbarkeit
+/// - Navigation nach erfolgreicher Anmeldung
 class _LoginScreenState extends State<LoginScreen> {
+  /// Schlüssel zur Verwaltung und Validierung des Formulars.
   final _formKey = GlobalKey<FormState>();
+  /// Controller für das E-Mail-Eingabefeld.
   final _emailController = TextEditingController();
+  /// Controller für das Passwort-Eingabefeld.
   final _passwordController = TextEditingController();
+  /// Service zur Authentifizierung.
   final _authService = AuthService();
-
+  /// Gibt an, ob gerade ein Login-Vorgang läuft.
   bool _isLoading = false;
+  /// Steuert, ob das Passwort verdeckt angezeigt wird.
   bool _obscurePassword = true;
 
   @override
@@ -27,6 +48,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Führt den Login-Vorgang aus.
+  /// Ablauf:
+  /// 1. Formularvalidierung
+  /// 2. Authentifizierung über [AuthService]
+  /// 3. Navigation zum [DashboardScreen] bei Erfolg
+  /// 4. Anzeige einer Fehlermeldung bei Misserfolg
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -59,6 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Navigiert zum [RegisterScreen].
+  /// Wird verwendet, wenn noch kein Benutzerkonto existiert.
   void _navigateToRegister() {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -67,6 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Baut die Benutzeroberfläche des Login-Screens.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

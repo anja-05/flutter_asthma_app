@@ -12,29 +12,57 @@ import '../services/fitbit_service.dart';
 import '../models/user.dart';
 import 'login_screen.dart';
 
-
+/// Zentrales Dashboard der App.
+/// Dieser Screen dient als Hauptübersicht nach dem Login und ermöglicht den Zugriff auf alle Kernfunktionen der App:
+/// - Symptomtagebuch
+/// - Peak-Flow-Messungen
+/// - Medikationsplan
+/// - Warnungen
+/// - Notfallplan
+/// - Vitaldaten
+///
+/// Zusätzlich verwaltet das Dashboard:
+/// - Benutzerbegrüßung
+/// - Logout
+/// - Benachrichtigungseinstellungen
+/// - Fitbit-Verbindung
 class DashboardScreen extends StatefulWidget {
+  /// Erstellt einen neuen [DashboardScreen].
   const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+/// Zustandsklasse für den [DashboardScreen].
+/// Enthält Logik für:
+/// - Laden des aktuellen Benutzers
+/// - Verwaltung von App-Einstellungen
+/// - Navigation zu Unterseiten
+/// - Systemberechtigungen (Benachrichtigungen)
 class _DashboardScreenState extends State<DashboardScreen> {
+  /// Service zur Authentifizierung und Benutzerverwaltung.
   final _authService = AuthService();
+  /// Service zur Verbindung und Synchronisation mit Fitbit.
   final _fitbitService = FitbitService();
+  /// Aktuell eingeloggter Benutzer.
   AppUser? _currentUser;
+  /// Gibt an, ob Daten noch geladen werden.
   bool _isLoading = true;
+  /// Aktueller Status der Benachrichtigungen innerhalb der App.
   bool _notificationsEnabled = false;
 
   @override
   void initState() {
     super.initState();
+    /// Initialisiert deutsche Datumsformate (z. B. für Begrüßung).
     initializeDateFormatting('de_DE', null);
     _loadUser();
     _loadNotificationPreference();
   }
 
+  /// Lädt die gespeicherte Benachrichtigungseinstellung.
+  /// Die Einstellung wird aus [SharedPreferences] gelesen und im lokalen State gespeichert.
   Future<void> _loadNotificationPreference() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -42,6 +70,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  /// Lädt den aktuell angemeldeten Benutzer.
+  /// Wird beim Initialisieren des Dashboards aufgerufen.
   Future<void> _loadUser() async {
     final user = await _authService.getCurrentUser();
     setState(() {
@@ -50,6 +80,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  /// Führt den Logout des Benutzers durch.
+  /// Zeigt zuvor einen Bestätigungsdialog an und navigiert anschließend zurück zum [LoginScreen].
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -80,6 +112,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// Aktiviert oder deaktiviert Benachrichtigungen.
+  /// Prüft Systemberechtigungen und speichert die Entscheidung dauerhaft in [SharedPreferences].
   Future<void> _toggleNotifications(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     
@@ -122,6 +156,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// Öffnet einen Dialog mit Hinweis auf Systemeinstellungen.
+  /// Wird verwendet, wenn Benachrichtigungen dauerhaft auf Systemebene deaktiviert wurden.
   void _showSettingsDialog() {
     showDialog(
       context: context,
@@ -139,6 +175,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Startet die Verbindung und Synchronisation mit Fitbit.
+  /// Das Ergebnis wird dem Benutzer als SnackBar angezeigt.
   Future<void> _handleFitbitConnection() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Verbinde mit Fitbit...')),
@@ -158,6 +196,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// Navigiert zu einem Feature-Screen basierend auf dem Namen.
+  /// Wird von den Dashboard-Karten verwendet.
   void _navigateToScreen(String name) {
     switch (name) {
       case 'Symptomtagebuch': Navigator.pushNamed(context, '/symptoms'); break;

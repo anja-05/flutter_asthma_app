@@ -2,28 +2,52 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
 
+/// Registrierungs-Screen der App.
+/// Ermöglicht neuen Benutzer:innen:
+/// - die Erstellung eines Kontos
+/// - Eingabe persönlicher Basisdaten
+/// - sichere Passwortvergabe mit Bestätigung
+///
+/// Die Registrierung erfolgt über den [AuthService].
 class RegisterScreen extends StatefulWidget {
+  /// Erstellt einen neuen [RegisterScreen].
   const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
+/// Zustandsklasse für den [RegisterScreen].
+/// Verwaltet:
+/// - Formularzustand und Validierung
+/// - Eingabefelder (Name, E-Mail, Passwort)
+/// - Passwort-Sichtbarkeit
+/// - Ladezustand während der Registrierung
 class _RegisterScreenState extends State<RegisterScreen> {
+  /// Schlüssel zur Verwaltung und Validierung des Formulars.
   final _formKey = GlobalKey<FormState>();
+  /// Controller für den Vornamen.
   final _firstNameController = TextEditingController();
+  /// Controller für den Nachnamen.
   final _lastNameController = TextEditingController();
+  /// Controller für die E-Mail-Adresse.
   final _emailController = TextEditingController();
+  /// Controller für das Passwort.
   final _passwordController = TextEditingController();
+  /// Controller für die Passwort-Bestätigung.
   final _confirmPasswordController = TextEditingController();
+  /// Service zur Benutzerregistrierung.
   final _authService = AuthService();
-
+  /// Gibt an, ob gerade ein Registrierungsvorgang läuft.
   bool _isLoading = false;
+  /// Steuert, ob das Passwort verdeckt angezeigt wird.
   bool _obscurePassword = true;
+  /// Steuert, ob das Bestätigungs-Passwort verdeckt angezeigt wird.
   bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
+    // Gibt alle verwendeten TextEditingController frei.
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -32,6 +56,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// Führt den Registrierungsvorgang aus.
+  /// Ablauf:
+  /// 1. Formularvalidierung
+  /// 2. Registrierung über [AuthService]
+  /// 3. Erfolgsmeldung und Rückkehr zum Login-Screen
+  /// 4. Fehlermeldung bei nicht erfolgreicher Registrierung
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -68,6 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  /// Baut die Benutzeroberfläche des Registrierungs-Screens.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -9,15 +9,25 @@ import '../constants/app_colors.dart';
 /// Der Screen ist nur ein Beispiel wie er einmal auschauen könnte.
 /// Er ist nicht fertig impplementiert.
 /// Er dient nur zur Veranschaulichung
+/// Ziel des Screens:
+/// - Visualisierung der aktuellen Peak-Flow-Messung
+/// - Darstellung des zeitlichen Verlaufs
+/// - Erklärung der medizinischen Zonen (grün / gelb / rot)
 class PeakFlowScreen extends StatefulWidget {
+  /// Erstellt einen neuen [PeakFlowScreen].
   const PeakFlowScreen({super.key});
 
   @override
   State<PeakFlowScreen> createState() => _PeakFlowScreenState();
 }
 
+/// Zustandsklasse für den [PeakFlowScreen].
+/// Enthält:
+/// - Beispielhafte Peak-Flow-Messdaten
+/// - UI-Logik zur Darstellung von Messwerten und Zonen
 class _PeakFlowScreenState extends State<PeakFlowScreen> {
-  // Beispiel-Messdaten
+  /// Beispielhafte Liste von Peak-Flow-Messungen.
+  /// Diese Daten sind statisch und dienen ausschließlich zur Demonstration von Diagrammen und UI-Komponenten.
   final List<PeakFlowMeasurement> measurements = [
     PeakFlowMeasurement(
       id: '1',
@@ -65,12 +75,16 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
     ),
   ];
 
+  /// Startet eine neue Peak-Flow-Messung.
+  /// Aktuell nur als Platzhalter implementiert.
+  /// Später kann hier z. B. eine Geräteanbindung oder eine Eingabemaske integriert werden.
   void _startNewMeasurement() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Neue Messung starten...')),
     );
   }
 
+  /// Baut die Benutzeroberfläche des Peak-Flow-Screens.
   @override
   Widget build(BuildContext context) {
     final latest = measurements.last;
@@ -146,6 +160,11 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
     ));
   }
 
+  /// Erstellt eine Infobox zur Interpretation der Peak-Flow-Zonen.
+  /// Die Zonen basieren auf dem prozentualen Anteil des persönlichen Bestwerts:
+  /// - Grün (≥ 80 %)
+  /// - Gelb (50–79 %)
+  /// - Rot (< 50 %)
   Widget _buildZoneExplanation() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -194,6 +213,7 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
     );
   }
 
+  /// Formatiert ein Datum in ein lesbares deutsches Format.
   String _formatDate(DateTime date) {
     final weekdays = [
       'Montag',
@@ -225,11 +245,17 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
   }
 }
 
+/// Interne UI-Komponente zur Darstellung einer Peak-Flow-Zone.
+/// Wird ausschließlich innerhalb des [PeakFlowScreen] zur Erklärung der Zonen verwendet.
 class _ZoneInfo extends StatelessWidget {
+  /// Farbe der Zone.
   final Color color;
+  /// Titel der Zone.
   final String title;
+  /// Beschreibung der Zone.
   final String description;
 
+  /// Erstellt ein neues [_ZoneInfo]-Widget.
   const _ZoneInfo({
     required this.color,
     required this.title,

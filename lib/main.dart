@@ -19,7 +19,6 @@ import 'screens/emergency_plan_screen.dart';
 import 'screens/medication_plan_screen.dart';
 import 'screens/peak_flow_screen.dart';
 import 'screens/warnings_screen.dart';
-import 'screens/fhir_observation_screen.dart';
 import 'screens/main_shell.dart';
 
 // Fitbit
@@ -74,7 +73,6 @@ class AsthmaApp extends StatelessWidget {
         '/peakflow': (context) => const PeakFlowScreen(),
         '/medication': (context) => const MedicationScreen(),
         '/warnings': (context) => const WarningScreen(),
-        '/fhir': (context) => const FhirObservationScreen(),
       },
 
       /// Einstiegspunkt abhängig vom Firebase-Auth-Status
