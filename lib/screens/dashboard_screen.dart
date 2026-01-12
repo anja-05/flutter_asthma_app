@@ -27,8 +27,10 @@ import 'login_screen.dart';
 /// - Benachrichtigungseinstellungen
 /// - Fitbit-Verbindung
 class DashboardScreen extends StatefulWidget {
+  final ValueChanged<int>? onSwitchTab;
+
   /// Erstellt einen neuen [DashboardScreen].
-  const DashboardScreen({super.key});
+  const DashboardScreen({super.key, this.onSwitchTab});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -199,13 +201,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Navigiert zu einem Feature-Screen basierend auf dem Namen.
   /// Wird von den Dashboard-Karten verwendet.
   void _navigateToScreen(String name) {
+    int? tabIndex;
     switch (name) {
-      case 'Symptomtagebuch': Navigator.pushNamed(context, '/symptoms'); break;
-      case 'Peak-Flow': Navigator.pushNamed(context, '/peakflow'); break;
-      case 'Medikationsplan': Navigator.pushNamed(context, '/medication'); break;
-      case 'Warnungen': Navigator.pushNamed(context, '/warnings'); break;
-      case 'Notfall': Navigator.pushNamed(context, '/emergency'); break;
-      case 'Vitaldaten': Navigator.pushNamed(context, '/vitals'); break;
+      case 'Symptomtagebuch':
+        tabIndex = 1;
+        break;
+      case 'Peak-Flow':
+        tabIndex = 2;
+        break;
+      case 'Medikationsplan':
+        tabIndex = 3;
+        break;
+    }
+
+    if (tabIndex != null && widget.onSwitchTab != null) {
+      widget.onSwitchTab!(tabIndex);
+    } else {
+      final routeName = switch (name) {
+        'Symptomtagebuch' => '/symptoms',
+        'Peak-Flow' => '/peakflow',
+        'Medikationsplan' => '/medication',
+        'Warnungen' => '/warnings',
+        'Notfall' => '/emergency',
+        'Vitaldaten' => '/vitals',
+        _ => null,
+      };
+      if (routeName != null) {
+        Navigator.pushNamed(context, routeName);
+      }
     }
   }
 
@@ -228,7 +251,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    GreetingHeader(userName: _currentUser?.displayName ?? "Gast"),
+                    Expanded(
+                      child: GreetingHeader(userName: _currentUser?.displayName ?? "Gast"),
+                    ),
                     IconButton(icon: const Icon(Icons.logout), color: AppColors.primaryGreen, onPressed: _handleLogout),
                   ],
                 ),
@@ -301,12 +326,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.notifications_active, color: AppColors.primaryGreen),
-                          SizedBox(width: 12),
-                          Text('Benachrichtigungen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                        ],
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(Icons.notifications_active, color: AppColors.primaryGreen),
+                            const SizedBox(width: 12),
+                            const Flexible(
+                              child: Text(
+                                'Benachrichtigungen',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       Switch(
                         value: _notificationsEnabled,

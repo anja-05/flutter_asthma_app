@@ -33,15 +33,18 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   /// Liste der Haupt-Screens der App.
-  /// Die Reihenfolge muss der Reihenfolge der Bottom-Navigation entsprechen.
-  ///
-  /// Durch die Verwendung eines [IndexedStack] bleiben die Zustände der Screens erhalten (z. B. Scrollposition, Formulareingaben).
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    SymptomDiaryScreen(),
-    PeakFlowScreen(),
-    MedicationScreen(),
-  ];
+  late final List<Widget> _screens;
+
+ @override
+  void initState() {
+    super.initState();
+    _screens = [
+      DashboardScreen(onSwitchTab: _onTabSelected),
+      const SymptomDiaryScreen(),
+      const PeakFlowScreen(),
+      const MedicationScreen(),
+    ];
+  }
 
   /// Wird aufgerufen, wenn ein Tab in der Bottom-Navigation ausgewählt wird.
   /// Aktualisiert den aktuell sichtbaren Screen.

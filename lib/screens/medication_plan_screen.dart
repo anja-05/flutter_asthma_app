@@ -8,6 +8,9 @@ import '../../models/medication.dart';
 import '../../widgets/medication/medication_intake_card.dart';
 import '../../widgets/medication/past_intake_card.dart';
 import '../../services/medication_service.dart';
+import '../../services/fhir_medication_service.dart';
+import '../../services/fhir_patient_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 const Uuid uuid = Uuid();
 
@@ -171,6 +174,8 @@ class MedicationScreen extends StatefulWidget {
 
 class _MedicationScreenState extends State<MedicationScreen> {
   final MedicationService _service = MedicationService();
+  final FhirMedicationService _fhirMedicationService = FhirMedicationService();
+  final FhirPatientService _fhirPatientService = FhirPatientService();
 
   List<Medication> _medicationPlans = [];
   List<MedicationIntake> _allTodayIntakesWithStatus = [];
@@ -253,8 +258,28 @@ class _MedicationScreenState extends State<MedicationScreen> {
     final newIntakesForToday = _generateTodayIntakes([newMedication]);
     final combinedIntakes = [..._allTodayIntakesWithStatus, ...newIntakesForToday];
 
+    // 🔹 lokal speichern (wie bisher)
     await _service.saveMedications(updatedPlans);
     await _service.saveTodayIntakes(combinedIntakes);
+
+    // 🔹 FHIR: Patient sicherstellen + MedicationRequest speichern
+    try {
+      final user = FirebaseAuth.instance.currentUser!;
+      final patientId = await _fhirPatientService.ensurePatientForUser(
+        uid: user.uid,
+        email: user.email ?? '',
+        firstName: 'Demo',   // falls du später aus user.dart ersetzen willst
+        lastName: 'User',
+      );
+
+      await _fhirMedicationService.saveMedicationPlan(
+        medication: newMedication,
+        patientId: patientId,
+      );
+    } catch (e) {
+      // bewusst nur Logging / Snackbar – App soll nicht abbrechen
+      _showSnackBar('FHIR-Speicherung fehlgeschlagen');
+    }
 
     setState(() {
       _medicationPlans = updatedPlans;

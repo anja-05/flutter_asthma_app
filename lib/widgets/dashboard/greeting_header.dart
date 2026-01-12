@@ -73,6 +73,8 @@ class GreetingHeader extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Color(0xFF4CAF50),
             ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
           const SizedBox(height: 8),
           if (subtitle != null)
@@ -86,11 +88,14 @@ class GreetingHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                _getCurrentDate(),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF757575),
+              Flexible(
+                child: Text(
+                  _getCurrentDate(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF757575),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
