@@ -1,4 +1,3 @@
-import 'package:fitbitter/fitbitter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -9,6 +8,7 @@ import '../widgets/dashboard/dashboard_card.dart';
 import '../widgets/dashboard/greeting_header.dart';
 
 import '../services/auth_service.dart';
+import '../services/fitbit_service.dart';
 import '../models/user.dart';
 import 'login_screen.dart';
 
@@ -22,6 +22,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final _authService = AuthService();
+  final _fitbitService = FitbitService();
   AppUser? _currentUser;
   bool _isLoading = true;
   bool _notificationsEnabled = false;
@@ -138,46 +139,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // FITBIT AUTH-FUNKTION
-  Future<void> _connectFitbit() async {
-    try {
-      FitbitCredentials? fitbitCredentials = await FitbitConnector.authorize(
-        clientID: '23TQ8M',
-        clientSecret: 'b6c85177c8b0c82babec097bc6c47141',
-        redirectUri: 'asthmaassist://fitbit-auth',
-        callbackUrlScheme: 'asthmaassist',
-      );
+  Future<void> _handleFitbitConnection() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Verbinde mit Fitbit...')),
+    );
 
-      if (fitbitCredentials != null) {
-        print("Fitbit-Login erfolgreich!");
-        _getHeartRate(fitbitCredentials);
-      }
-    } catch (e) {
-      print("Fehler bei Fitbit-Authentifizierung: $e");
+    // Call the service (Clean!)
+    String resultMessage = await _fitbitService.connectAndSync();
+
+    // Show result
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(resultMessage),
+          backgroundColor: resultMessage.contains("Fehler") ? Colors.red : AppColors.primaryGreen,
+        ),
+      );
     }
   }
-
-
-  // HERZFREQUENZ ABRUFEN
-  Future<void> _getHeartRate(FitbitCredentials fitbitCredentials) async {
-    try {
-      FitbitHeartDataManager heartManager = FitbitHeartDataManager(
-        clientID: '23TQ8M',
-        clientSecret: 'b6c85177c8b0c82babec097bc6c47141',
-      );
-      FitbitHeartRateAPIURL heartRateUrl = FitbitHeartRateAPIURL.day(
-        date: DateTime.now(),
-        fitbitCredentials: fitbitCredentials,
-      );
-      List<FitbitData> fitbitData = await heartManager.fetch(heartRateUrl);
-      if (fitbitData != null && fitbitData.isNotEmpty) {
-        print("Herzfrequenzdaten empfangen.");
-      }
-    } catch (e) {
-      print("Fehler beim Abrufen der Herzfrequenz: $e");
-    }
-  }
-
 
   void _navigateToScreen(String name) {
     switch (name) {
@@ -302,7 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _connectFitbit,
+                    onPressed: _handleFitbitConnection,
                     icon: const Icon(Icons.watch),
                     label: const Text("Mit Fitbit verbinden"),
                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
