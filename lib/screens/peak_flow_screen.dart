@@ -89,75 +89,83 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
   Widget build(BuildContext context) {
     final latest = measurements.last;
 
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+              (route) => false,
+        );
+        return false;
+      },
+      child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
         body: SafeArea(
-        child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-    children: [
-          const Text(
-            'Peak-Flow Messungen',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryGreen,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Verfolge deine Lungenfunktion und erkenne Veränderungen frühzeitig.',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
             children: [
-              Text(
-                _formatDate(DateTime.now()),
-                style: const TextStyle(
+              const Text(
+                'Peak-Flow Messungen',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryGreen,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Verfolge deine Lungenfunktion und erkenne Veränderungen frühzeitig.',
+                style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
               ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text(
+                    _formatDate(DateTime.now()),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Aktuelle Messung
+              PeakFlowMeter(
+                currentValue: latest.value.toDouble(),
+                personalBest: latest.personalBest.toDouble(),
+                onMeasure: _startNewMeasurement,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Verlauf als Chart
+              PeakFlowChart(
+                data: measurements
+                    .map(
+                      (m) => PeakFlowData(
+                    date:
+                    '${m.dateTime.day.toString().padLeft(2, '0')}.${m.dateTime.month.toString().padLeft(2, '0')}',
+                    value: m.value.toDouble(),
+                  ),
+                )
+                    .toList(),
+                personalBest: latest.personalBest.toDouble(),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Zonen-Info
+              _buildZoneExplanation(),
             ],
           ),
-          const SizedBox(height: 24),
-
-          // dann könnten PeakFlowMeter, Chart usw. folgen
-
-
-          // Aktuelle Messung
-          PeakFlowMeter(
-            currentValue: latest.value.toDouble(),
-            personalBest: latest.personalBest.toDouble(),
-            onMeasure: _startNewMeasurement,
-          ),
-
-          const SizedBox(height: 24),
-
-          // Verlauf als Chart
-          PeakFlowChart(
-            data: measurements
-                .map(
-                  (m) => PeakFlowData(
-                date:
-                '${m.dateTime.day.toString().padLeft(2, '0')}.${m.dateTime.month.toString().padLeft(2, '0')}',
-                value: m.value.toDouble(),
-              ),
-            )
-                .toList(),
-            personalBest: latest.personalBest.toDouble(),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Zonen-Info
-          _buildZoneExplanation(),
-        ],
+        ),
       ),
-    ));
+    );
   }
 
   /// Erstellt eine Infobox zur Interpretation der Peak-Flow-Zonen.

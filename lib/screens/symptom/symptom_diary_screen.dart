@@ -59,6 +59,25 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     setState(() => _history.insert(0, entry));
     _persistHistory();
 
+    final currentDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_entry_date', currentDate);
+
+    String trend = "Weniger Anfälle";
+    if (_history.length > 1) {
+      final lastEntry = _history[1];
+      final lastIntensity = lastEntry['symptoms'].values.reduce((a, b) => a + b);
+      final currentIntensity = entry['symptoms'].values.reduce((a, b) => a + b);
+
+      if (currentIntensity > lastIntensity) {
+        trend = "Mehr Anfälle";
+      } else if (currentIntensity == lastIntensity) {
+        trend = "Stabil";
+      }
+    }
+
+    await prefs.setString('trend', trend);
+
     final user = await _authService.getCurrentUser();
     if (user == null || user.fhirPatientId == null) return;
 
@@ -77,6 +96,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
       );
     }
   }
+
 
   /// Lädt die gespeicherte Historie aus dem persistenten Speicher.
   ///
@@ -105,7 +125,16 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/dashboard',
+            (route) => false,
+      );
+      return false;
+    },
+    child: Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
         child: DefaultTabController(
@@ -128,7 +157,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Verfolge deine Lungenfunktion und erkenne Veränderungen frühzeitig.',
+                      'Geben Sie Ihre Symtopme ein und beobachten Sie Ihre Symptomveränderungen in der Historie',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -180,6 +209,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

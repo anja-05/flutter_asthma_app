@@ -272,10 +272,16 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Baut die Benutzeroberfläche des Notfallplans.
-    // Enthält Überschrift, Datum, Notfall-Checkliste, Kontaktliste,
-    // Hinweis-Karte und einen SOS-Button in der Fußzeile.
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/dashboard',
+            (route) => false,
+      );
+      return false; // verhindert Default-Back
+    },
+    child: Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -356,6 +362,7 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
           PhoneService.call('112');
         },
       ),
+    ),
     );
   }
 }

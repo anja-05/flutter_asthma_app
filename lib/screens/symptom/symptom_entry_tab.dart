@@ -348,23 +348,25 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
                   children: ['Selten', 'Gelegentlich', 'Häufig']
                       .map((f) => Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: ElevatedButton(
-                        onPressed: () =>
-                            setState(() => _newSymptomFrequency = f),
+                        onPressed: () => setState(() => _newSymptomFrequency = f),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                          _newSymptomFrequency == f
+                          backgroundColor: _newSymptomFrequency == f
                               ? AppColors.primaryGreen
                               : Colors.white,
-                          foregroundColor:
-                          _newSymptomFrequency == f
+                          foregroundColor: _newSymptomFrequency == f
                               ? Colors.white
                               : AppColors.primaryGreen,
                           elevation: 0,
                         ),
-                        child: Text(f),
+                        child: Text(
+                          f,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
                   ))

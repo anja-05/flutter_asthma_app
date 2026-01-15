@@ -8,6 +8,17 @@ class MedicationService {
   static const _keyTodayIntakes = 'todayIntakeList';
   static const _keyPastIntakes = 'pastIntakeList';
   static const _keyLastAccessedDate = 'lastAccessedDate';
+  static const _keyMedicationTimes = 'medicationTimes';
+
+  Future<void> saveMedicationTimes(List<String> times) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyMedicationTimes, times);
+  }
+
+  Future<List<String>> loadMedicationTimes() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_keyMedicationTimes) ?? [];
+  }
 
   Future<List<Medication>> loadMedications() async {
     final prefs = await SharedPreferences.getInstance();

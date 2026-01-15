@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_colors.dart';
+import '../services/medication_service.dart';
 import '../widgets/dashboard/dashboard_card.dart';
 import '../widgets/dashboard/greeting_header.dart';
 
@@ -53,6 +55,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   /// Aktueller Status der Benachrichtigungen innerhalb der App.
   bool _notificationsEnabled = false;
+  /// Letzter Eintrag eines Symtopms
+  String _lastEntryDate = 'Kein Eintrag';
+  /// Trend der Symtopme
+  String _trend = 'Kein Trend';
+  List<String> _medicationTimes = [];
+  String _nextMedicationTime = '';
 
   @override
   void initState() {
@@ -61,6 +69,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     initializeDateFormatting('de_DE', null);
     _loadUser();
     _loadNotificationPreference();
+    _loadLastEntryDate();
+    _loadTrend();
+    _loadMedicationTimes();
+    _calculateNextMedicationTime();
+  }
+
+  Future<void> _loadMedicationTimes() async {
+    final medicationService = MedicationService();
+    final times = await medicationService.loadMedicationTimes();
+    setState(() {
+      _medicationTimes = times;
+    });
+  }
+
+  void _calculateNextMedicationTime() {
+    DateTime nextTime = _getNextMedicationTime(_medicationTimes);
+    setState(() {
+      _nextMedicationTime = DateFormat('HH:mm').format(nextTime);  // Zeigt die nächste Zeit im Format "HH:mm"
+    });
+  }
+
+  /// Lädt das Datum des letzten Eintrags
+  Future<void> _loadLastEntryDate() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastEntryDate = prefs.getString('last_entry_date') ?? 'Kein Eintrag';
+    setState(() {
+      _lastEntryDate = lastEntryDate;
+    });
   }
 
   /// Lädt die gespeicherte Benachrichtigungseinstellung.
@@ -69,6 +105,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+    });
+  }
+
+  /// Lädt den Trend der Symptome
+  Future<void> _loadTrend() async {
+    final prefs = await SharedPreferences.getInstance();
+    final trend = prefs.getString('trend') ?? 'Kein Trend';
+    setState(() {
+      _trend = trend;
     });
   }
 
@@ -118,10 +163,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Prüft Systemberechtigungen und speichert die Entscheidung dauerhaft in [SharedPreferences].
   Future<void> _toggleNotifications(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     if (value) {
       var status = await Permission.notification.status;
-      
+
       if (status.isPermanentlyDenied) {
         if (mounted) {
           _showSettingsDialog();
@@ -132,15 +177,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       status = await Permission.notification.request();
-      
+
       if (mounted) {
         setState(() {
           _notificationsEnabled = status.isGranted;
         });
         await prefs.setBool('notifications_enabled', status.isGranted);
-        
+
         if (!status.isGranted) {
-           ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Benachrichtigungen wurden vom System abgelehnt.')),
           );
         }
@@ -201,42 +246,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Navigiert zu einem Feature-Screen basierend auf dem Namen.
   /// Wird von den Dashboard-Karten verwendet.
   void _navigateToScreen(String name) {
-    int? tabIndex;
-    switch (name) {
-      case 'Symptomtagebuch':
-        tabIndex = 1;
-        break;
-      case 'Peak-Flow':
-        tabIndex = 2;
-        break;
-      case 'Medikationsplan':
-        tabIndex = 3;
-        break;
-    }
+    final routeName = switch (name) {
+      'Symptomtagebuch' => '/symptoms',
+      'Peak-Flow' => '/peakflow',
+      'Medikationsplan' => '/medication',
+      'Warnungen' => '/warnings',
+      'Notfall' => '/emergency',
+      'Vitaldaten' => '/vitals',
+      _ => null,
+    };
 
-    if (tabIndex != null && widget.onSwitchTab != null) {
-      widget.onSwitchTab!(tabIndex);
-    } else {
-      final routeName = switch (name) {
-        'Symptomtagebuch' => '/symptoms',
-        'Peak-Flow' => '/peakflow',
-        'Medikationsplan' => '/medication',
-        'Warnungen' => '/warnings',
-        'Notfall' => '/emergency',
-        'Vitaldaten' => '/vitals',
-        _ => null,
-      };
-      if (routeName != null) {
-        Navigator.pushNamed(context, routeName);
-      }
+    if (routeName != null) {
+      Navigator.pushNamed(context, routeName);
     }
   }
 
+  DateTime _getNextMedicationTime(List<String> times) {
+    final now = DateTime.now();
+    DateTime nextTime = DateTime(now.year, now.month, now.day, 23, 59); // Setzt Standardzeit auf spät abends
+
+    for (var time in times) {
+      final parts = time.split(':');
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+
+      final timeOfDay = DateTime(now.year, now.month, now.day, hour, minute);
+
+      if (timeOfDay.isAfter(now) && timeOfDay.isBefore(nextTime)) {
+        nextTime = timeOfDay;
+      }
+    }
+
+    if (nextTime.isBefore(now)) {
+      nextTime = DateTime(now.year, now.month, now.day + 1, 0, 0);  // Wenn keine zukünftige Zeit gefunden wurde, setze die Zeit auf den nächsten Tag
+    }
+
+    return nextTime;
+  }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(backgroundColor: AppColors.backgroundColor, body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)));
+      return const Scaffold(
+        backgroundColor: AppColors.backgroundColor,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+      );
     }
 
     return Scaffold(
@@ -263,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.book,
                   iconColor: AppColors.lightGreen,
                   backgroundColor: AppColors.symptomCardBg,
-                  content: 'Letzter Eintrag: 20.10.2025\nTrend: Weniger Anfälle',
+                  content: 'Letzter Eintrag: $_lastEntryDate\nTrend: Weniger Anfälle',
                   onTap: () => _navigateToScreen('Symptomtagebuch'),
                 ),
                 const SizedBox(height: 16),
@@ -281,7 +335,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.medication,
                   iconColor: AppColors.primaryGreen,
                   backgroundColor: AppColors.medicationCardBg,
-                  content: 'Nächstes Medikament: 18:00 Uhr\nKeine Doppeldosierung',
+                  content: 'Nächstes Medikament: $_nextMedicationTime\nKeine Doppeldosierung',
                   onTap: () => _navigateToScreen('Medikationsplan'),
                 ),
                 const SizedBox(height: 16),

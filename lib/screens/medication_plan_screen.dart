@@ -1,6 +1,6 @@
-// lib/screens/medication_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../constants/app_colors.dart';
@@ -30,12 +30,10 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
   String _type = 'Tablette';
   List<String> _times = ['12:00'];
   final List<String> _types = ['Tablette', 'Inhalator', 'Spray', 'Kapsel', 'Tropfen', 'Sonstiges'];
+  String _frequencyType = 'daily';
+  int _everyXDays = 1;
+  Set<int> _weekdays = {};
 
-  void _addTimeField() {
-    setState(() {
-      _times.add('00:00');
-    });
-  }
   void _removeTimeField(int index) {
     if (_times.length > 1) {
       setState(() {
@@ -57,13 +55,21 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
         return;
       }
 
+      // Speichern der Zeiten in SharedPreferences
+      MedicationService().saveMedicationTimes(cleanTimes);
+
+      // Rest des Codes für das Speichern des Medikaments
       final newMedication = Medication(
         id: uuid.v4(),
         name: _name.trim(),
         dosage: _dosage.trim(),
         type: _type,
         times: cleanTimes,
+        frequencyType: _frequencyType,
+        everyXDays: _frequencyType == 'everyX' ? _everyXDays : null,
+        weekdays: _frequencyType == 'weekly' ? _weekdays.toList() : null,
       );
+
       widget.onAdd(newMedication);
       Navigator.of(context).pop();
     }
@@ -82,17 +88,25 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Name'),
                 onSaved: (value) => _name = value ?? '',
-                validator: (value) => value!.trim().isEmpty ? 'Name erforderlich' : null,
+                validator: (value) =>
+                value!.trim().isEmpty
+                    ? 'Name erforderlich'
+                    : null,
               ),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Dosierung/Menge (z.B. 500 mg, 2 Hübe)'),
+                decoration: const InputDecoration(
+                    labelText: 'Dosierung/Menge (z.B. 500 mg, 2 Hübe)'),
                 onSaved: (value) => _dosage = value ?? '',
-                validator: (value) => value!.trim().isEmpty ? 'Dosierung erforderlich' : null,
+                validator: (value) =>
+                value!.trim().isEmpty
+                    ? 'Dosierung erforderlich'
+                    : null,
               ),
               DropdownButtonFormField<String>(
                 value: _type,
                 decoration: const InputDecoration(labelText: 'Typ'),
-                items: _types.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                items: _types.map((type) =>
+                    DropdownMenuItem(value: type, child: Text(type))).toList(),
                 onChanged: (value) {
                   setState(() {
                     _type = value!;
@@ -100,8 +114,62 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                 },
               ),
               const SizedBox(height: 20),
-              const Text('Einnahmezeiten (HH:MM)', style: TextStyle(fontWeight: FontWeight.bold)),
-              ..._times.asMap().entries.map((entry) {
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Einnahmeintervall',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              DropdownButtonFormField<String>(
+                value: _frequencyType,
+                decoration: const InputDecoration(labelText: 'Intervall'),
+                items: const [
+                  DropdownMenuItem(value: 'daily', child: Text('Täglich')),
+                  DropdownMenuItem(value: 'everyX', child: Text('Alle X Tage')),
+                  DropdownMenuItem(
+                      value: 'weekly', child: Text('Bestimmte Wochentage')),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _frequencyType = value!;
+                  });
+                },
+              ),
+              if (_frequencyType == 'everyX')
+                TextFormField(
+                  initialValue: '1',
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Alle wie viele Tage?',
+                  ),
+                  onChanged: (value) {
+                    _everyXDays = int.tryParse(value) ?? 1;
+                  },
+                ),
+              if (_frequencyType == 'weekly')
+                Wrap(
+                  spacing: 6,
+                  children: List.generate(7, (index) {
+                    final day = index + 1;
+                    const labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+                    return ChoiceChip(
+                      label: Text(labels[index]),
+                      selected: _weekdays.contains(day),
+                      onSelected: (selected) {
+                        setState(() {
+                          selected ? _weekdays.add(day) : _weekdays.remove(day);
+                        });
+                      },
+                    );
+                  }),
+                ),
+              const Text('Einnahmezeiten (HH:MM)',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              ..._times
+                  .asMap()
+                  .entries
+                  .map((entry) {
                 final index = entry.key;
                 return Row(
                   children: [
@@ -116,13 +184,18 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                               final pickedTime = await showTimePicker(
                                 context: context,
                                 initialTime: TimeOfDay(
-                                  hour: int.tryParse(_times[index].split(':')[0]) ?? 12,
-                                  minute: int.tryParse(_times[index].split(':')[1]) ?? 0,
+                                  hour: int.tryParse(
+                                      _times[index].split(':')[0]) ?? 12,
+                                  minute: int.tryParse(
+                                      _times[index].split(':')[1]) ?? 0,
                                 ),
                               );
                               if (pickedTime != null) {
                                 setState(() {
-                                  _times[index] = '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}';
+                                  _times[index] =
+                                  '${pickedTime.hour.toString().padLeft(
+                                      2, '0')}:${pickedTime.minute.toString()
+                                      .padLeft(2, '0')}';
                                 });
                               }
                             },
@@ -130,23 +203,22 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                         ),
                         onChanged: (value) => _times[index] = value,
                         validator: (value) {
-                          if (value == null || !RegExp(r'^\d{2}:\d{2}$').hasMatch(value)) return 'Format HH:MM';
+                          if (value == null ||
+                              !RegExp(r'^\d{2}:\d{2}$').hasMatch(value))
+                            return 'Format HH:MM';
                           return null;
                         },
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.remove_circle_outline, color: _times.length > 1 ? Colors.red : Colors.grey),
-                      onPressed: _times.length > 1 ? () => _removeTimeField(index) : null,
+                      icon: Icon(Icons.remove_circle_outline, color: _times
+                          .length > 1 ? Colors.red : Colors.grey),
+                      onPressed: _times.length > 1 ? () =>
+                          _removeTimeField(index) : null,
                     ),
                   ],
                 );
               }).toList(),
-              TextButton.icon(
-                onPressed: _addTimeField,
-                icon: const Icon(Icons.add),
-                label: const Text('Weitere Zeit hinzufügen'),
-              ),
             ],
           ),
         ),
@@ -164,6 +236,7 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
     );
   }
 }
+
 
 class MedicationScreen extends StatefulWidget {
   const MedicationScreen({super.key});
@@ -196,8 +269,30 @@ class _MedicationScreenState extends State<MedicationScreen> {
     return now.year != lastAccess.year || now.month != lastAccess.month || now.day != lastAccess.day;
   }
 
+  bool _shouldTakeToday(Medication med) {
+    final today = DateTime.now();
+
+    if (med.frequencyType == 'daily') {
+      return true;
+    }
+
+    if (med.frequencyType == 'everyX' && med.everyXDays != null) {
+      final start = DateTime(today.year, today.month, today.day);
+      final diffDays = start.difference(start).inDays;
+      return diffDays % med.everyXDays! == 0;
+    }
+
+    if (med.frequencyType == 'weekly' && med.weekdays != null) {
+      return med.weekdays!.contains(today.weekday);
+    }
+
+    return false;
+  }
+
   List<MedicationIntake> _generateTodayIntakes(List<Medication> plans) {
-    final allIntakes = plans.expand((plan) {
+    final allIntakes = plans
+        .where(_shouldTakeToday)
+        .expand((plan) {
       return plan.times.map((time) {
         return MedicationIntake(
           id: uuid.v4(),
@@ -366,151 +461,173 @@ class _MedicationScreenState extends State<MedicationScreen> {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.backgroundColor,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.primaryGreen,
+          ),
+        ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadMedications,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-            children: [
-              const Text(
-                'Medikationsplan',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryGreen,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Plane deine Medikamenteneinnahmen und erhalte Erinnerungen.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now()),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              const Text(
-                'Heutige Medikamente',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryGreen,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              if (_todayIntakes.isEmpty)
-                const Center(child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                  child: Text('Keine Medikamente mehr für heute geplant!'),
-                )),
-
-              ..._todayIntakes.map((intake) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: MedicationIntakeCard(
-                    intake: intake,
-                    onMarkAsTaken: () => _markAsTaken(intake),
-                    onDelete: () => _deleteIntakeAndPlan(intake.id),
-                  ),
-                );
-              }),
-
-              const SizedBox(height: 12),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _addMedication,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Medikament hinzufügen'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+              (route) => false,
+        );
+        return false; // verhindert Standard-Zurücknavigation
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundColor,
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadMedications,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+              children: [
+                const Text(
+                  'Medikationsplan',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryGreen,
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.lightGreen.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 8),
+                const Text(
+                  'Plane deine Medikamenteneinnahmen und erhalte Erinnerungen.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      _remindersEnabled ? Icons.notifications_active : Icons.notifications_off,
-                      color: AppColors.primaryGreen,
+                const SizedBox(height: 8),
+                Text(
+                  DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
+                      .format(DateTime.now()),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                const Text(
+                  'Heutige Medikamente',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                if (_todayIntakes.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20.0),
+                      child: Text('Keine Medikamente mehr für heute geplant!'),
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Erinnerungen sind aktiviert. Du erhältst Benachrichtigungen zur Einnahmezeit.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
+                  ),
+
+                ..._todayIntakes.map((intake) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: MedicationIntakeCard(
+                      intake: intake,
+                      onMarkAsTaken: () => _markAsTaken(intake),
+                      onDelete: () => _deleteIntakeAndPlan(intake.id),
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 12),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _addMedication,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Medikament hinzufügen'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-
-                    Switch(
-                      value: _remindersEnabled,
-                      onChanged: _toggleReminders,
-                      activeColor: AppColors.primaryGreen,
-                    )
-                  ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              const Text(
-                'Vergangene Einnahmen',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryGreen,
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.lightGreen.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _remindersEnabled
+                            ? Icons.notifications_active
+                            : Icons.notifications_off,
+                        color: AppColors.primaryGreen,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Erinnerungen sind aktiviert. Du erhältst Benachrichtigungen zur Einnahmezeit.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _remindersEnabled,
+                        onChanged: _toggleReminders,
+                        activeColor: AppColors.primaryGreen,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
 
-              if (_pastIntakes.isEmpty)
-                const Center(child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                  child: Text('Noch keine vergangenen Einnahmen gespeichert.'),
-                )),
+                const SizedBox(height: 24),
 
-              ..._pastIntakes.map((intake) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: PastIntakeCard(intake: intake),
-                );
-              }).toList(),
-            ],
+                const Text(
+                  'Vergangene Einnahmen',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                if (_pastIntakes.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20.0),
+                      child: Text(
+                        'Noch keine vergangenen Einnahmen gespeichert.',
+                      ),
+                    ),
+                  ),
+
+                ..._pastIntakes.map((intake) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: PastIntakeCard(intake: intake),
+                  );
+                }).toList(),
+              ],
+            ),
           ),
         ),
       ),

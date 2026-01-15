@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 
 import '../constants/app_colors.dart';
-import '../widgets/common/app_card.dart';
 import '../widgets/vitals/vital_value_card.dart';
 import '../widgets/vitals/vital_chart.dart';
 import '../services/fhir_vital_service.dart';
@@ -212,13 +211,23 @@ class _VitalScreenState extends State<VitalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final today =  DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now());
+    final today =
+    DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now());
 
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+              (route) => false,
+        );
+        return false;
+      },
+      child: Scaffold(
         backgroundColor: const Color(0xFFF9FCF9),
         body: SafeArea(
           child: RefreshIndicator(
-              onRefresh: _fetchAndSaveNetworkData,
+            onRefresh: _fetchAndSaveNetworkData,
             color: const Color(0xFF388E3C),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
@@ -232,17 +241,17 @@ class _VitalScreenState extends State<VitalScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                  const Text(
-                    'Erfasse oder synchronisiere deine Vitalwerte und behalte deinen Verlauf im Blick.',
-                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                  ),
+                const Text(
+                  'Erfasse oder synchronisiere deine Vitalwerte und behalte deinen Verlauf im Blick.',
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   today,
-                  style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style:
+                  const TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 24),
-
 
                 // Aktuelle Werte
                 Container(
@@ -267,7 +276,8 @@ class _VitalScreenState extends State<VitalScreen> {
                           Spacer(),
                           Icon(Icons.bluetooth, color: Color(0xFF388E3C)),
                           SizedBox(width: 4),
-                          Text('Verbunden', style: TextStyle(color: Color(0xFF388E3C))),
+                          Text('Verbunden',
+                              style: TextStyle(color: Color(0xFF388E3C))),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -298,7 +308,7 @@ class _VitalScreenState extends State<VitalScreen> {
                   ),
                 ),
 
-                // Hinweis-Box für Fitbit-Limitierungen
+                // Hinweis-Box
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -309,12 +319,14 @@ class _VitalScreenState extends State<VitalScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.amber.shade800),
+                      Icon(Icons.info_outline,
+                          color: Colors.amber.shade800),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           "Hinweis: Sauerstoffsättigung und Atemfrequenz werden von Fitbit nur während des Schlafs gemessen. Werte sind Durchschnittswerte.",
-                          style: TextStyle(color: Colors.amber.shade900, fontSize: 13),
+                          style: TextStyle(
+                              color: Colors.amber.shade900, fontSize: 13),
                         ),
                       ),
                     ],
@@ -332,7 +344,7 @@ class _VitalScreenState extends State<VitalScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Tab-Auswahl für das Diagramm
+                // Tab-Auswahl
                 Container(
                   height: 40,
                   decoration: BoxDecoration(
@@ -348,14 +360,20 @@ class _VitalScreenState extends State<VitalScreen> {
                           child: Container(
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.white : Colors.transparent,
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(24),
                             ),
                             child: Text(
                               tabs[index],
                               style: TextStyle(
-                                color: isSelected ? const Color(0xFF388E3C) : Colors.grey[600],
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                color: isSelected
+                                    ? const Color(0xFF388E3C)
+                                    : Colors.grey[600],
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
                               ),
                             ),
                           ),
@@ -367,23 +385,33 @@ class _VitalScreenState extends State<VitalScreen> {
 
                 const SizedBox(height: 16),
 
-                // Vitaldaten-Diagramm (wird neu geladen bei jedem Tab-Wechsel)
                 VitalChart(
                   title: tabs[selectedTabIndex],
                   data: _chartData,
-                  unit: selectedTabIndex == 0 ? 'bpm' : selectedTabIndex == 1 ? '%' : '/min',
+                  unit: selectedTabIndex == 0
+                      ? 'bpm'
+                      : selectedTabIndex == 1
+                      ? '%'
+                      : '/min',
                   color: selectedTabIndex == 0
                       ? const Color(0xFFD32F2F)
                       : selectedTabIndex == 1
                       ? const Color(0xFF2196F3)
                       : const Color(0xFF388E3C),
-                  minY: selectedTabIndex == 0 ? 40 : selectedTabIndex == 1 ? 80 : 0,
-                  maxY: selectedTabIndex == 0 ? 100 : selectedTabIndex == 1 ? 100 : 40,
+                  minY: selectedTabIndex == 0
+                      ? 40
+                      : selectedTabIndex == 1
+                      ? 80
+                      : 0,
+                  maxY: selectedTabIndex == 0
+                      ? 100
+                      : selectedTabIndex == 1
+                      ? 100
+                      : 40,
                 ),
 
                 const SizedBox(height: 24),
 
-                // Listenansicht der Historie (Statisch für Demo)
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -402,35 +430,40 @@ class _VitalScreenState extends State<VitalScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ...history.map((entry) => _buildHistoryTile(entry)).toList(),
+                      ...history
+                          .map((entry) => _buildHistoryTile(entry))
+                          .toList(),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 24),
 
-                // Button für manuelle Demo-Messung
                 SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _addManualMeasurement,
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('Manuelle Messung (nur für Demo)'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF388E3C),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _addManualMeasurement,
+                    icon: const Icon(Icons.add_circle_outline),
+                    label:
+                    const Text('Manuelle Messung (nur für Demo)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF388E3C),
+                      foregroundColor: Colors.white,
+                      padding:
+                      const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
               ],
             ),
           ),
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildHistoryTile(VitalEntry entry) {

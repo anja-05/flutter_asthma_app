@@ -8,6 +8,9 @@ class Medication {
   final String dosage;
   final String type;
   final List<String> times;
+  final String frequencyType;
+  final int? everyXDays;
+  final List<int>? weekdays;
 
   Medication({
     required this.id,
@@ -15,6 +18,9 @@ class Medication {
     required this.dosage,
     required this.type,
     required this.times,
+    this.frequencyType = 'daily',
+    this.everyXDays,
+    this.weekdays,
   });
 
   Map<String, dynamic> toJson() => {
@@ -23,6 +29,9 @@ class Medication {
     'dosage': dosage,
     'type': type,
     'times': times,
+    'frequencyType': frequencyType,
+    'everyXDays': everyXDays,
+    'weekdays': weekdays,
   };
 
   factory Medication.fromJson(Map<String, dynamic> json) {
@@ -32,6 +41,11 @@ class Medication {
       dosage: json['dosage'] as String,
       type: json['type'] as String,
       times: List<String>.from(json['times'] as List),
+      frequencyType: json['frequencyType'] ?? 'daily',
+      everyXDays: json['everyXDays'],
+      weekdays: json['weekdays'] != null
+          ? List<int>.from(json['weekdays'])
+          : null,
     );
   }
 }
