@@ -89,81 +89,70 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
   Widget build(BuildContext context) {
     final latest = measurements.last;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard',
-          (route) => false,
-        );
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundColor,
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-            children: [
-              const Text(
-                'Peak-Flow Messungen',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryGreen,
-                ),
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+          children: [
+            const Text(
+              'Peak-Flow Messungen',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryGreen,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Verfolge deine Lungenfunktion und erkenne Veränderungen frühzeitig.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Verfolge deine Lungenfunktion und erkenne Veränderungen frühzeitig.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    _formatDate(DateTime.now()),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  _formatDate(DateTime.now()),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-              // Aktuelle Messung
-              PeakFlowMeter(
-                currentValue: latest.value.toDouble(),
-                personalBest: latest.personalBest.toDouble(),
-                onMeasure: _startNewMeasurement,
-              ),
+            // Aktuelle Messung
+            PeakFlowMeter(
+              currentValue: latest.value.toDouble(),
+              personalBest: latest.personalBest.toDouble(),
+              onMeasure: _startNewMeasurement,
+            ),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-              // Verlauf als Chart
-              PeakFlowChart(
-                data: measurements
-                    .map(
-                      (m) => PeakFlowData(
-                        date:
-                            '${m.dateTime.day.toString().padLeft(2, '0')}.${m.dateTime.month.toString().padLeft(2, '0')}',
-                        value: m.value.toDouble(),
-                      ),
-                    )
-                    .toList(),
-                personalBest: latest.personalBest.toDouble(),
-              ),
+            // Verlauf als Chart
+            PeakFlowChart(
+              data: measurements
+                  .map(
+                    (m) => PeakFlowData(
+                      date:
+                          '${m.dateTime.day.toString().padLeft(2, '0')}.${m.dateTime.month.toString().padLeft(2, '0')}',
+                      value: m.value.toDouble(),
+                    ),
+                  )
+                  .toList(),
+              personalBest: latest.personalBest.toDouble(),
+            ),
 
-              const SizedBox(height: 32),
+            const SizedBox(height: 32),
 
-              // Zonen-Info
-              _buildZoneExplanation(),
-            ],
-          ),
+            // Zonen-Info
+            _buildZoneExplanation(),
+          ],
         ),
       ),
     );

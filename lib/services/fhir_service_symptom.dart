@@ -1,17 +1,25 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// Service responsible for sending medical data to a HAPI FHIR server
+/// Service zur Übermittlung von medizinischen Daten an einen HAPI-FHIR-Server.
 class FhirService {
-  /// Public HAPI FHIR R5 test server
+  /// Öffentlicher HAPI FHIR R5 Testserver.
   static const String _baseUrl = 'https://hapi.fhir.org/baseR5';
 
-  /// IMPORTANT:
-  /// In a real system this would come from authentication / patient creation
-  /// For your project, a fixed demo patient is totally fine
+  /// WICHTIG:
+  /// In echten System würde diese ID aus der Authentifizierung / Patientenerstellung stammen.
+  /// Für dieses Projekt ist ein fester Demo-Patient völlig ausreichend.
   static const String _patientId = 'asthma-demo-patient';
 
-  /// Saves ONE symptom as ONE Observation resource
+  /// Speichert EIN Symptom als EINE Observation-Ressource.
+  ///
+  /// Erstellt eine `Observation`-Ressource vom Typ `survey` und sendet sie an den FHIR-Server.
+  ///
+  /// Parameter:
+  /// - [symptomName]: Der Name des Symptoms (z.B. "Husten").
+  /// - [intensity]: Die Intensität des Symptoms (Wert).
+  /// - [dateTime]: Der Zeitpunkt der Aufzeichnung.
+  /// - [notes]: Optionale Notizen.
   Future<void> saveSymptomObservation({
     required String symptomName,
     required int intensity,
@@ -26,7 +34,7 @@ class FhirService {
           'coding': [
             {
               'system':
-              'http://terminology.hl7.org/CodeSystem/observation-category',
+                  'http://terminology.hl7.org/CodeSystem/observation-category',
               'code': 'survey',
             }
           ]

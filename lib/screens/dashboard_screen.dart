@@ -34,9 +34,10 @@ import '../../models/medication.dart';
 /// - Fitbit-Verbindung
 class DashboardScreen extends StatefulWidget {
   final ValueChanged<int>? onSwitchTab;
+  final int? refreshTrigger;
 
   /// Erstellt einen neuen [DashboardScreen].
-  const DashboardScreen({super.key, this.onSwitchTab});
+  const DashboardScreen({super.key, this.onSwitchTab, this.refreshTrigger});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -80,6 +81,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _calculateNextMedicationTime();
     tz.initializeTimeZones();
     _initializeNotifications();
+  }
+
+  @override
+  void didUpdateWidget(covariant DashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshTrigger != oldWidget.refreshTrigger) {
+      _loadLastEntryDate();
+      _loadTrend();
+      _loadMedicationTimes();
+      _calculateNextMedicationTime();
+    }
   }
 
   Future<void> _loadMedicationTimes() async {
@@ -348,13 +360,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Navigiert zu einem Feature-Screen basierend auf dem Namen.
   /// Wird von den Dashboard-Karten verwendet.
   void _navigateToScreen(String name) {
+    // Mapping für Tabs in MainShell
+    final tabIndex = switch (name) {
+      'Symptomtagebuch' => 1,
+      'Peak-Flow' => 2,
+      'Medikationsplan' => 3,
+      'Vitaldaten' => 4,
+      'Warnungen' => 5,
+      _ => null,
+    };
+
+    if (tabIndex != null) {
+      widget.onSwitchTab?.call(tabIndex);
+      return;
+    }
+
+    // Mapping für externe Routen (die BottomBar verdecken sollen)
     final routeName = switch (name) {
-      'Symptomtagebuch' => '/symptoms',
-      'Peak-Flow' => '/peakflow',
-      'Medikationsplan' => '/medication',
-      'Warnungen' => '/warnings',
-      'Notfall' => '/emergency',
-      'Vitaldaten' => '/vitals',
+      'Notfall' => '/emergency', // Soll explizit ohne BottomBar sein
       _ => null,
     };
 

@@ -14,9 +14,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:permission_handler/permission_handler.dart';
 
 const Uuid uuid = Uuid();
 
+/// Dialog-Widget zum Hinzufügen eines neuen Medikaments.
+///
+/// Eingabe von:
+/// - Medikamentenname
+/// - Dosierung
+/// - Typ (z.B. Tablette)
+/// - Einnahmeintervall (Täglich, Alle X Tage, Wochentage)
+/// - Einnahmezeiten
 class _AddMedicationDialog extends StatefulWidget {
   final Function(Medication) onAdd;
 
@@ -46,6 +55,7 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
     _initializeNotifications();
   }
 
+  /// Initialisiert die lokalen Benachrichtigungen und Android-Kanäle.
   void _initializeNotifications() async {
     // 1. Android-Einstellungen definieren
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -87,6 +97,7 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
     }
   }
 
+  /// Plant Benachrichtigungen für neu erstellte Medikamente
   void _scheduleNotifications(Medication med) async {
     final location = tz.getLocation('Europe/Berlin'); // Einheitliche Zeitzone
     final now = tz.TZDateTime.now(location);
@@ -356,7 +367,14 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
   }
 }
 
-
+/// Hauptscreen für Medikationsübersicht
+///
+/// Zeigt:
+/// - Die für heute geplanten Einnahmen (mit Checkboxen zum Abhaken).
+/// - Eine Liste vergangener Einnahmen (Historie).
+/// - Einen Button zum Hinzufügen neuer Medikamente.
+///
+/// Verwaltet zudem die Synchronisation mit dem [MedicationService] und FHIR.
 class MedicationScreen extends StatefulWidget {
   const MedicationScreen({super.key});
 
@@ -364,11 +382,13 @@ class MedicationScreen extends StatefulWidget {
   State<MedicationScreen> createState() => _MedicationScreenState();
 }
 
-class _MedicationScreenState extends State<MedicationScreen> {
+class _MedicationScreenState extends State<MedicationScreen>
+    with WidgetsBindingObserver {
   final MedicationService _service = MedicationService();
   final FhirMedicationService _fhirMedicationService = FhirMedicationService();
   final FhirPatientService _fhirPatientService = FhirPatientService();
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   List<Medication> _medicationPlans = [];
   List<MedicationIntake> _allTodayIntakesWithStatus = [];
@@ -380,15 +400,42 @@ class _MedicationScreenState extends State<MedicationScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadMedications();
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissionStatus();
+    }
+  }
+
+  Future<void> _checkPermissionStatus() async {
+    final status = await Permission.notification.status;
+    if (mounted) {
+      setState(() {
+        _remindersEnabled = status.isGranted;
+      });
+    }
+  }
+
+  /// Prüft, ob seit dem letzten Zugriff ein neuer Tag begonnen hat.
   bool _isNewDay(DateTime? lastAccess) {
     if (lastAccess == null) return true;
     final now = DateTime.now();
-    return now.year != lastAccess.year || now.month != lastAccess.month || now.day != lastAccess.day;
+    return now.year != lastAccess.year ||
+        now.month != lastAccess.month ||
+        now.day != lastAccess.day;
   }
 
+  /// Prüft anhand des Intervalls, ob ein Medikament heute eingenommen werden muss.
   bool _shouldTakeToday(Medication med) {
     final today = DateTime.now();
 
@@ -409,6 +456,7 @@ class _MedicationScreenState extends State<MedicationScreen> {
     return false;
   }
 
+  /// Generiert Liste der heutigen Einnahmen basierend auf den Plänen.
   List<MedicationIntake> _generateTodayIntakes(List<Medication> plans) {
     final allIntakes = plans
         .where(_shouldTakeToday)
@@ -429,6 +477,9 @@ class _MedicationScreenState extends State<MedicationScreen> {
     return allIntakes;
   }
 
+  /// Lädt alle Medikamentendaten (Pläne, Einnahmen, Historie).
+  ///
+  /// Führt bei einem neuen Tag auch die Generierung der neuen Tagesliste durch.
   Future<void> _loadMedications() async {
     final loadedPlans = await _service.loadMedications();
     final loadedRemindersStatus = await _service.loadRemindersStatus();
@@ -468,16 +519,19 @@ class _MedicationScreenState extends State<MedicationScreen> {
     });
   }
 
+  /// Fügt einen neuen Medikationsplan hinzu und speichert ihn in:
+  /// 1. Lokalen App-Daten (SharedPreferences)
+  /// 2. FHIR-Server (MedicationRequest)
   void _addNewPlan(Medication newMedication) async {
     final updatedPlans = [..._medicationPlans, newMedication];
     final newIntakesForToday = _generateTodayIntakes([newMedication]);
     final combinedIntakes = [..._allTodayIntakesWithStatus, ...newIntakesForToday];
 
-    // 🔹 lokal speichern (wie bisher)
+    // lokal speichern (wie bisher)
     await _service.saveMedications(updatedPlans);
     await _service.saveTodayIntakes(combinedIntakes);
 
-    // 🔹 FHIR: Patient sicherstellen + MedicationRequest speichern
+    // FHIR: Patient sicherstellen + MedicationRequest speichern
     try {
       final user = FirebaseAuth.instance.currentUser!;
       final patientId = await _fhirPatientService.ensurePatientForUser(
@@ -528,14 +582,6 @@ class _MedicationScreenState extends State<MedicationScreen> {
     _flutterLocalNotificationsPlugin.cancelAll();
 
     _showSnackBar('Medikament "${medicationName}" gelöscht.');
-  }
-
-  void _toggleReminders(bool value) async {
-    setState(() {
-      _remindersEnabled = value;
-    });
-    await _service.saveRemindersStatus(value);
-    _showSnackBar('Erinnerungen ${value ? "aktiviert" : "deaktiviert"}.');
   }
 
   void _markAsTaken(MedicationIntake intake) async {
@@ -591,166 +637,149 @@ class _MedicationScreenState extends State<MedicationScreen> {
       );
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard',
-          (route) => false,
-        );
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundColor,
-        body: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _loadMedications,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              children: [
-                const Text(
-                  'Medikationsplan',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryGreen,
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _loadMedications,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+            children: [
+              const Text(
+                'Medikationsplan',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryGreen,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Plane deine Medikamenteneinnahmen und erhalte Erinnerungen.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
+                    .format(DateTime.now()),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Heutige Medikamente',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryGreen,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (_todayIntakes.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20.0),
+                    child: Text('Keine Medikamente mehr für heute geplant!'),
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Plane deine Medikamenteneinnahmen und erhalte Erinnerungen.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
+              ..._todayIntakes.map((intake) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: MedicationIntakeCard(
+                    intake: intake,
+                    onMarkAsTaken: () => _markAsTaken(intake),
+                    onDelete: () => _deleteIntakeAndPlan(intake.id),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
-                      .format(DateTime.now()),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                const Text(
-                  'Heutige Medikamente',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                if (_todayIntakes.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20.0),
-                      child: Text('Keine Medikamente mehr für heute geplant!'),
-                    ),
-                  ),
-
-                ..._todayIntakes.map((intake) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: MedicationIntakeCard(
-                      intake: intake,
-                      onMarkAsTaken: () => _markAsTaken(intake),
-                      onDelete: () => _deleteIntakeAndPlan(intake.id),
-                    ),
-                  );
-                }),
-
-                const SizedBox(height: 12),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _addMedication,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Medikament hinzufügen'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                );
+              }),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _addMedication,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Medikament hinzufügen'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.lightGreen.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
+              ),
+              const SizedBox(height: 24),
+              Container(
+                decoration: BoxDecoration(
+                  color: (_remindersEnabled)
+                      ? AppColors.lightGreen.withValues(alpha: 0.15)
+                      : Colors.orange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _remindersEnabled
+                          ? Icons.notifications_active
+                          : Icons.notifications_off,
+                      color: _remindersEnabled
+                          ? AppColors.primaryGreen
+                          : Colors.orange,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
                         _remindersEnabled
-                            ? Icons.notifications_active
-                            : Icons.notifications_off,
-                        color: AppColors.primaryGreen,
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Erinnerungen sind aktiviert. Du erhältst Benachrichtigungen zur Einnahmezeit.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
+                            ? 'Erinnerungen sind aktiviert.'
+                            : 'Erinnerungen sind deaktiviert. Bitte in den Einstellungen prüfen.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _remindersEnabled
+                              ? AppColors.textSecondary
+                              : Colors.orange,
+                          fontWeight: _remindersEnabled
+                              ? FontWeight.normal
+                              : FontWeight.bold,
                         ),
                       ),
-                      Switch(
-                        value: _remindersEnabled,
-                        onChanged: _toggleReminders,
-                        activeThumbColor: AppColors.primaryGreen,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-
-                const SizedBox(height: 24),
-
-                const Text(
-                  'Vergangene Einnahmen',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryGreen,
-                  ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Vergangene Einnahmen',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryGreen,
                 ),
-                const SizedBox(height: 12),
-
-                if (_pastIntakes.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20.0),
-                      child: Text(
-                        'Noch keine vergangenen Einnahmen gespeichert.',
-                      ),
+              ),
+              const SizedBox(height: 12),
+              if (_pastIntakes.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20.0),
+                    child: Text(
+                      'Noch keine vergangenen Einnahmen gespeichert.',
                     ),
                   ),
-
-                ..._pastIntakes.map((intake) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: PastIntakeCard(intake: intake),
-                  );
-                }).toList(),
-              ],
-            ),
+                ),
+              ..._pastIntakes.map((intake) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: PastIntakeCard(intake: intake),
+                );
+              }).toList(),
+            ],
           ),
         ),
       ),

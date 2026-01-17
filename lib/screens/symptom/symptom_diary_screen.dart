@@ -124,87 +124,76 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard',
-          (route) => false,
-        );
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundColor,
-        body: SafeArea(
-          child: DefaultTabController(
-            length: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Symptomtagebuch',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryGreen,
-                        ),
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: SafeArea(
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Symptomtagebuch',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryGreen,
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Geben Sie Ihre Symtopme ein und beobachten Sie Ihre Symptomveränderungen in der Historie',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Geben Sie Ihre Symtopme ein und beobachten Sie Ihre Symptomveränderungen in der Historie',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Text(
-                            DateFormat(
-                              'EEEE, d. MMMM yyyy',
-                              'de_DE',
-                            ).format(DateTime.now()),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          DateFormat(
+                            'EEEE, d. MMMM yyyy',
+                            'de_DE',
+                          ).format(DateTime.now()),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.wb_sunny,
-                            size: 18,
-                            color: Colors.orangeAccent,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const TabBar(
-                  labelColor: Colors.black,
-                  indicatorColor: AppColors.primaryGreen,
-                  tabs: [
-                    Tab(text: 'Eintrag'),
-                    Tab(text: 'Verlauf'),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.wb_sunny,
+                          size: 18,
+                          color: Colors.orangeAccent,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      SymptomEntryTab(onSave: addEntry),
-                      SymptomHistoryTab(history: _history),
-                    ],
-                  ),
+              ),
+              const TabBar(
+                labelColor: Colors.black,
+                indicatorColor: AppColors.primaryGreen,
+                tabs: [
+                  Tab(text: 'Eintrag'),
+                  Tab(text: 'Verlauf'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    SymptomEntryTab(onSave: addEntry),
+                    SymptomHistoryTab(history: _history),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

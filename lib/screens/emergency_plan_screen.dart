@@ -272,93 +272,82 @@ class _EmergencyPlanScreenState extends State<EmergencyPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard',
-          (route) => false,
-        );
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundColor,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Notfallplan',
-                  style: TextStyle(
-                    color: AppColors.primaryGreen,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Notfallplan',
+                style: TextStyle(
+                  color: AppColors.primaryGreen,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Im Notfall schnell handeln – dein persönlicher Plan und SOS-Kontakte.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Im Notfall schnell handeln – dein persönlicher Plan und SOS-Kontakte.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
-                      .format(DateTime.now()),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                DateFormat('EEEE, dd. MMMM yyyy', 'de_DE')
+                    .format(DateTime.now()),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
                 ),
-                const SizedBox(height: 24),
-                EmergencyChecklistCard(
-                  steps: emergencySteps,
-                  onStepTap: (index) {
-                    setState(() {
-                      emergencySteps[index].completed =
-                          !emergencySteps[index].completed;
-                    });
-                  },
-                ),
-                const SizedBox(height: 24),
-                EmergencyContactList(
-                  contacts: contacts,
-                  onCall: (c) => PhoneService.call(c.phoneNumber),
-                  onAdd: _showAddContactDialog,
-                  onEdit: (c) => _showEditContactDialog(c),
-                  onDelete: (c) {
-                    setState(() {
-                      contacts.removeWhere((e) => e.id == c.id);
-                    });
-                    _saveContacts();
-                  },
-                ),
-                const SizedBox(height: 24),
-                const InfoCard(
-                  title: 'Wichtige Hinweise',
-                  items: [
-                    'Bei akuter Atemnot sofort Notarzt rufen',
-                    'Notfallmedikation immer griffbereit haben',
-                    'Im Zweifel lieber einmal zu viel als zu wenig Hilfe holen',
-                  ],
-                  icon: Icons.lightbulb,
-                  backgroundColor: Color(0xFFFFF3E0),
-                  accentColor: Color(0xFFF57C00),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+              EmergencyChecklistCard(
+                steps: emergencySteps,
+                onStepTap: (index) {
+                  setState(() {
+                    emergencySteps[index].completed =
+                        !emergencySteps[index].completed;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
+              EmergencyContactList(
+                contacts: contacts,
+                onCall: (c) => PhoneService.call(c.phoneNumber),
+                onAdd: _showAddContactDialog,
+                onEdit: (c) => _showEditContactDialog(c),
+                onDelete: (c) {
+                  setState(() {
+                    contacts.removeWhere((e) => e.id == c.id);
+                  });
+                  _saveContacts();
+                },
+              ),
+              const SizedBox(height: 24),
+              const InfoCard(
+                title: 'Wichtige Hinweise',
+                items: [
+                  'Bei akuter Atemnot sofort Notarzt rufen',
+                  'Notfallmedikation immer griffbereit haben',
+                  'Im Zweifel lieber einmal zu viel als zu wenig Hilfe holen',
+                ],
+                icon: Icons.lightbulb,
+                backgroundColor: Color(0xFFFFF3E0),
+                accentColor: Color(0xFFF57C00),
+              ),
+            ],
           ),
         ),
-        bottomNavigationBar: FloatingSOSButton(
-          onPressed: () {
-            PhoneService.call('112');
-          },
-        ),
+      ),
+      bottomNavigationBar: FloatingSOSButton(
+        onPressed: () {
+          PhoneService.call('112');
+        },
       ),
     );
   }

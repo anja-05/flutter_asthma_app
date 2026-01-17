@@ -222,251 +222,238 @@ class _VitalScreenState extends State<VitalScreen> {
     final today =
         DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now());
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard',
-          (route) => false,
-        );
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF9FCF9),
-        body: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _fetchAndSaveNetworkData,
-            color: const Color(0xFF388E3C),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-              children: [
-                const Text(
-                  'Vitaldaten',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryGreen,
-                  ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FCF9),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _fetchAndSaveNetworkData,
+          color: const Color(0xFF388E3C),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            children: [
+              const Text(
+                'Vitaldaten',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryGreen,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Erfasse oder synchronisiere deine Vitalwerte und behalte deinen Verlauf im Blick.',
-                  style:
-                      TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  today,
-                  style: const TextStyle(
-                      fontSize: 14, color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 24),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Erfasse oder synchronisiere deine Vitalwerte und behalte deinen Verlauf im Blick.',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                today,
+                style: const TextStyle(
+                    fontSize: 14, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 24),
 
-                // Aktuelle Werte
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: const [
-                          Text(
-                            'Aktuelle Werte',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF388E3C),
-                            ),
-                          ),
-                          Spacer(),
-                          Icon(Icons.bluetooth, color: Color(0xFF388E3C)),
-                          SizedBox(width: 4),
-                          Text('Verbunden',
-                              style: TextStyle(color: Color(0xFF388E3C))),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      VitalValueCard(
-                        title: 'Puls',
-                        value: _currentPulse,
-                        unit: 'bpm',
-                        icon: Icons.favorite_border,
-                        color: const Color(0xFFD32F2F),
-                      ),
-                      const SizedBox(height: 12),
-                      VitalValueCard(
-                        title: 'Blutsauerstoff',
-                        value: _currentO2,
-                        unit: '%',
-                        icon: Icons.water_drop,
-                        color: const Color(0xFF2196F3),
-                      ),
-                      const SizedBox(height: 12),
-                      VitalValueCard(
-                        title: 'Atemfrequenz',
-                        value: _currentBreath,
-                        unit: '/min',
-                        icon: Icons.air,
-                        color: const Color(0xFF388E3C),
-                      ),
-                    ],
-                  ),
+              // Aktuelle Werte
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-
-                // Hinweis-Box
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.amber.shade800),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          "Hinweis: Sauerstoffsättigung und Atemfrequenz werden von Fitbit nur während des Schlafs gemessen. Werte sind Durchschnittswerte.",
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Text(
+                          'Aktuelle Werte',
                           style: TextStyle(
-                              color: Colors.amber.shade900, fontSize: 13),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF388E3C),
+                          ),
                         ),
+                        Spacer(),
+                        Icon(Icons.bluetooth, color: Color(0xFF388E3C)),
+                        SizedBox(width: 4),
+                        Text('Verbunden',
+                            style: TextStyle(color: Color(0xFF388E3C))),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    VitalValueCard(
+                      title: 'Puls',
+                      value: _currentPulse,
+                      unit: 'bpm',
+                      icon: Icons.favorite_border,
+                      color: const Color(0xFFD32F2F),
+                    ),
+                    const SizedBox(height: 12),
+                    VitalValueCard(
+                      title: 'Blutsauerstoff',
+                      value: _currentO2,
+                      unit: '%',
+                      icon: Icons.water_drop,
+                      color: const Color(0xFF2196F3),
+                    ),
+                    const SizedBox(height: 12),
+                    VitalValueCard(
+                      title: 'Atemfrequenz',
+                      value: _currentBreath,
+                      unit: '/min',
+                      icon: Icons.air,
+                      color: const Color(0xFF388E3C),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Hinweis-Box
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.amber.shade800),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "Hinweis: Sauerstoffsättigung und Atemfrequenz werden von Fitbit nur während des Schlafs gemessen. Werte sind Durchschnittswerte.",
+                        style: TextStyle(
+                            color: Colors.amber.shade900, fontSize: 13),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
 
-                const SizedBox(height: 24),
-                const Text(
-                  'Verlauf',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF388E3C),
-                  ),
+              const SizedBox(height: 24),
+              const Text(
+                'Verlauf',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF388E3C),
                 ),
-                const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 12),
 
-                // Tab-Auswahl
-                Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    children: List.generate(tabs.length, (index) {
-                      final isSelected = selectedTabIndex == index;
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () => _onTabChanged(index),
-                          child: Container(
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
+              // Tab-Auswahl
+              Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: List.generate(tabs.length, (index) {
+                    final isSelected = selectedTabIndex == index;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => _onTabChanged(index),
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color:
+                                isSelected ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Text(
+                            tabs[index],
+                            style: TextStyle(
                               color: isSelected
-                                  ? Colors.white
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Text(
-                              tabs[index],
-                              style: TextStyle(
-                                color: isSelected
-                                    ? const Color(0xFF388E3C)
-                                    : Colors.grey[600],
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                              ),
+                                  ? const Color(0xFF388E3C)
+                                  : Colors.grey[600],
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
-                      );
-                    }),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                VitalChart(
-                  title: tabs[selectedTabIndex],
-                  data: _chartData,
-                  unit: selectedTabIndex == 0
-                      ? 'bpm'
-                      : selectedTabIndex == 1
-                          ? '%'
-                          : '/min',
-                  color: selectedTabIndex == 0
-                      ? const Color(0xFFD32F2F)
-                      : selectedTabIndex == 1
-                          ? const Color(0xFF2196F3)
-                          : const Color(0xFF388E3C),
-                  minY: selectedTabIndex == 0
-                      ? 40
-                      : selectedTabIndex == 1
-                          ? 80
-                          : 0,
-                  maxY: selectedTabIndex == 0
-                      ? 100
-                      : selectedTabIndex == 1
-                          ? 100
-                          : 40,
-                ),
-
-                const SizedBox(height: 24),
-
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Verlauf / Historie (Demo)',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF388E3C),
-                        ),
                       ),
-                      const SizedBox(height: 16),
-                      ...history
-                          .map((entry) => _buildHistoryTile(entry))
-                          .toList(),
-                    ],
-                  ),
+                    );
+                  }),
                 ),
+              ),
 
-                const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _addManualMeasurement,
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Manuelle Messung (nur für Demo)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF388E3C),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              VitalChart(
+                title: tabs[selectedTabIndex],
+                data: _chartData,
+                unit: selectedTabIndex == 0
+                    ? 'bpm'
+                    : selectedTabIndex == 1
+                        ? '%'
+                        : '/min',
+                color: selectedTabIndex == 0
+                    ? const Color(0xFFD32F2F)
+                    : selectedTabIndex == 1
+                        ? const Color(0xFF2196F3)
+                        : const Color(0xFF388E3C),
+                minY: selectedTabIndex == 0
+                    ? 40
+                    : selectedTabIndex == 1
+                        ? 80
+                        : 0,
+                maxY: selectedTabIndex == 0
+                    ? 100
+                    : selectedTabIndex == 1
+                        ? 100
+                        : 40,
+              ),
+
+              const SizedBox(height: 24),
+
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Verlauf / Historie (Demo)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF388E3C),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...history
+                        .map((entry) => _buildHistoryTile(entry))
+                        .toList(),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _addManualMeasurement,
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Manuelle Messung (nur für Demo)'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF388E3C),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
-              ],
-            ),
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),

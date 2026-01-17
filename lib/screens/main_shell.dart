@@ -5,6 +5,8 @@ import 'dashboard_screen.dart';
 import 'symptom/symptom_diary_screen.dart';
 import 'peak_flow_screen.dart';
 import 'medication_plan_screen.dart';
+import 'vital_data_screen.dart';
+import 'warnings_screen.dart';
 
 /// Zentrale Shell der App mit Bottom-Navigation.
 /// Diese Klasse bildet den strukturellen Rahmen der Anwendung und verwaltet die Navigation zwischen den Hauptbereichen:
@@ -32,18 +34,15 @@ class _MainShellState extends State<MainShell> {
   /// Index des aktuell ausgewählten Tabs.
   int _currentIndex = 0;
 
+  /// Trigger für Dashboard-Aktualisierung
+  int _dashboardRefreshId = 0;
+
   /// Liste der Haupt-Screens der App.
-  late final List<Widget> _screens;
+  // late final List<Widget> _screens; // Removed
 
  @override
   void initState() {
     super.initState();
-    _screens = [
-      DashboardScreen(onSwitchTab: _onTabSelected),
-      const SymptomDiaryScreen(),
-      const PeakFlowScreen(),
-      const MedicationScreen(),
-    ];
   }
 
   /// Wird aufgerufen, wenn ein Tab in der Bottom-Navigation ausgewählt wird.
@@ -51,20 +50,42 @@ class _MainShellState extends State<MainShell> {
   void _onTabSelected(int index) {
     setState(() {
       _currentIndex = index;
+      if (index == 0) {
+        _dashboardRefreshId++;
+      }
     });
   }
 
   /// Baut das Grundlayout der App.
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: _currentIndex,
-        onTap: _onTabSelected,
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        setState(() {
+          _currentIndex = 0;
+        });
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            DashboardScreen(
+              onSwitchTab: _onTabSelected,
+              refreshTrigger: _dashboardRefreshId,
+            ),
+            const SymptomDiaryScreen(),
+            const PeakFlowScreen(),
+            const MedicationScreen(),
+            const VitalScreen(),
+            const WarningScreen(),
+          ],
+        ),
+        bottomNavigationBar: AppBottomNavigation(
+          currentIndex: _currentIndex,
+          onTap: _onTabSelected,
+        ),
       ),
     );
   }

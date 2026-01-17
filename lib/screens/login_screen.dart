@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
-import 'dashboard_screen.dart';
+import 'main_shell.dart';
 
 /// Login-Screen der App.
 /// Dieser Screen ermöglicht bestehenden Benutzer:innen:
@@ -71,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => const DashboardScreen(),
+            builder: (context) => const MainShell(),
           ),
         );
       }
