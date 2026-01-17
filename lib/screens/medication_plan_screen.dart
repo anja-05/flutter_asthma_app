@@ -11,6 +11,9 @@ import '../../services/medication_service.dart';
 import '../../services/fhir_medication_service.dart';
 import '../../services/fhir_patient_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 const Uuid uuid = Uuid();
 
@@ -34,6 +37,118 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
   int _everyXDays = 1;
   Set<int> _weekdays = {};
 
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+    tz.initializeTimeZones();
+    _initializeNotifications();
+  }
+
+  void _initializeNotifications() async {
+    // 1. Android-Einstellungen definieren
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    final InitializationSettings initializationSettings =
+    InitializationSettings(android: initializationSettingsAndroid);
+
+    // 2. Plugin initialisieren
+    await _flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (details) {
+        // Hier könnte man reagieren, wenn der User auf die Notification klickt
+        debugPrint("Benachrichtigung geklickt: ${details.payload}");
+      },
+    );
+
+    // 3. Den Kanal für Android 8.0+ explizit im System registrieren
+    // Ohne diesen Schritt "kennt" Android die App in den Settings oft nicht.
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'medication_channel_id',
+      'Medikations-Erinnerungen',
+      importance: Importance.max,
+    );
+
+    final androidPlugin = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(channel);
+
+      // 4. DAS löst das System-Pop-up aus (Android 13+)
+      final bool? grantedNotification = await androidPlugin.requestNotificationsPermission();
+      debugPrint("Benachrichtigungs-Berechtigung: $grantedNotification");
+
+      // 5. Fragt nach exakten Alarmen (hast du schon im Menü gemacht, sicherheitshalber hier auch)
+      final bool? grantedExact = await androidPlugin.requestExactAlarmsPermission();
+      debugPrint("Exakte Alarm-Berechtigung: $grantedExact");
+    }
+  }
+
+  void _scheduleNotifications(Medication med) async {
+    final location = tz.getLocation('Europe/Berlin'); // Einheitliche Zeitzone
+    final now = tz.TZDateTime.now(location);
+
+    for (int i = 0; i < med.times.length; i++) {
+      final timeParts = med.times[i].split(':');
+      final hour = int.parse(timeParts[0]);
+      final minute = int.parse(timeParts[1]);
+
+      // EINDEUTIGE ID GENERIEREN:
+      // Wir nehmen den Hash-Code des Namens und addieren den Index der Uhrzeit.
+      // Das stellt sicher, dass verschiedene Medikamente unterschiedliche IDs haben.
+      final int notificationId = med.name.hashCode + i;
+
+      var scheduledTime = tz.TZDateTime(
+        location,
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      );
+
+      // Falls die Zeit heute schon vorbei ist -> morgen starten
+      if (scheduledTime.isBefore(now)) {
+        scheduledTime = scheduledTime.add(const Duration(days: 1));
+      }
+
+      // Logik für die Wiederholung
+      DateTimeComponents? matchComponent;
+      if (med.frequencyType == 'daily') {
+        matchComponent = DateTimeComponents.time; // Täglich zur selben Zeit
+      } else if (med.frequencyType == 'weekly') {
+        matchComponent = DateTimeComponents.dayOfWeekAndTime; // Wochentag + Zeit
+      }
+
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        notificationId, // Jetzt eindeutig!
+        'Medikament einnehmen',
+        'Es ist Zeit für ${med.name} (${med.dosage})',
+        scheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'medication_channel_id',
+            'Medikations-Erinnerungen',
+            channelDescription: 'Erinnerungen für Medikamenteneinnahme',
+            importance: Importance.max,
+            priority: Priority.high,
+            styleInformation: BigTextStyleInformation(''), // Erlaubt längeren Text
+          ),
+        ),
+        matchDateTimeComponents: matchComponent,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+      );
+
+      debugPrint("Benachrichtigung geplant: ${med.name} um $scheduledTime mit ID $notificationId");
+    }
+  }
+
+
   void _removeTimeField(int index) {
     if (_times.length > 1) {
       setState(() {
@@ -50,15 +165,12 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
 
       if (cleanTimes.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mindestens eine gültige Einnahmezeit (HH:MM) erforderlich.')),
+          const SnackBar(content: Text('Mindestens eine gültige Einnahmezeit erforderlich.')),
         );
         return;
       }
 
-      // Speichern der Zeiten in SharedPreferences
-      MedicationService().saveMedicationTimes(cleanTimes);
-
-      // Rest des Codes für das Speichern des Medikaments
+      // 1. Objekt erstellen
       final newMedication = Medication(
         id: uuid.v4(),
         name: _name.trim(),
@@ -70,8 +182,12 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
         weekdays: _frequencyType == 'weekly' ? _weekdays.toList() : null,
       );
 
+      // 2. Speichern & UI aktualisieren
       widget.onAdd(newMedication);
       Navigator.of(context).pop();
+
+      // 3. Benachrichtigungen mit dem GANZEN OBJEKT planen
+      _scheduleNotifications(newMedication);
     }
   }
 
@@ -175,7 +291,9 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                   children: [
                     Expanded(
                       child: TextFormField(
+                        key: Key('time_field_${index}_${_times[index]}'),
                         initialValue: _times[index],
+                        readOnly: true,
                         decoration: InputDecoration(
                           hintText: 'HH:MM',
                           suffixIcon: IconButton(
@@ -249,6 +367,7 @@ class _MedicationScreenState extends State<MedicationScreen> {
   final MedicationService _service = MedicationService();
   final FhirMedicationService _fhirMedicationService = FhirMedicationService();
   final FhirPatientService _fhirPatientService = FhirPatientService();
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   List<Medication> _medicationPlans = [];
   List<MedicationIntake> _allTodayIntakesWithStatus = [];
@@ -404,6 +523,8 @@ class _MedicationScreenState extends State<MedicationScreen> {
       _allTodayIntakesWithStatus = updatedIntakes;
       _todayIntakes = updatedIntakes.where((i) => !i.taken).toList();
     });
+
+    _flutterLocalNotificationsPlugin.cancelAll();
 
     _showSnackBar('Medikament "${medicationName}" gelöscht.');
   }

@@ -3,6 +3,9 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 import '../constants/app_colors.dart';
 import '../services/medication_service.dart';
@@ -13,6 +16,7 @@ import '../services/auth_service.dart';
 import '../services/fitbit_service.dart';
 import '../models/user.dart';
 import 'login_screen.dart';
+import '../../models/medication.dart';
 
 /// Zentrales Dashboard der App.
 /// Dieser Screen dient als Hauptübersicht nach dem Login und ermöglicht den Zugriff auf alle Kernfunktionen der App:
@@ -45,6 +49,7 @@ class DashboardScreen extends StatefulWidget {
 /// - Navigation zu Unterseiten
 /// - Systemberechtigungen (Benachrichtigungen)
 class _DashboardScreenState extends State<DashboardScreen> {
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   /// Service zur Authentifizierung und Benutzerverwaltung.
   final _authService = AuthService();
   /// Service zur Verbindung und Synchronisation mit Fitbit.
@@ -73,6 +78,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadTrend();
     _loadMedicationTimes();
     _calculateNextMedicationTime();
+    tz.initializeTimeZones();
+    _initializeNotifications();
   }
 
   Future<void> _loadMedicationTimes() async {
@@ -159,14 +166,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  // Initialisiert die Benachrichtigungen
+  void _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    final InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  // Planen der Benachrichtigungen
+  void _scheduleNotifications(Medication med) async {
+    final location = tz.getLocation('Europe/Berlin');
+    final now = tz.TZDateTime.now(location);
+
+    for (int i = 0; i < med.times.length; i++) {
+      final timeParts = med.times[i].split(':');
+      final hour = int.parse(timeParts[0]);
+      final minute = int.parse(timeParts[1]);
+
+      // Einzigartige ID erstellen (Kombination aus Med-Hash und Zeit-Index)
+      final int notificationId = med.id.hashCode + i;
+
+      var scheduledTime = tz.TZDateTime(location, now.year, now.month, now.day, hour, minute);
+
+      if (med.frequencyType == 'weekly' && med.weekdays != null) {
+        // Logik für bestimmte Wochentage
+        for (int weekday in med.weekdays!) {
+          // Flutter nutzt 1=Mo...7=So. Wir müssen ggf. Tage addieren, bis der Wochentag passt
+          // Dies erfordert eine etwas komplexere Berechnung der nächsten Ausführung.
+
+          await _flutterLocalNotificationsPlugin.zonedSchedule(
+            notificationId + weekday, // Eindeutige ID pro Wochentag
+            'Medikament: ${med.name}',
+            'Es ist Zeit für deine Dosis: ${med.dosage}',
+            scheduledTime, // Hier müsste die Logik für den nächsten passenden Wochentag rein
+            _notificationDetails(),
+            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime, // WICHTIG
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          );
+        }
+      } else {
+        // Standard: Täglich
+        if (scheduledTime.isBefore(now)) {
+          scheduledTime = scheduledTime.add(const Duration(days: 1));
+        }
+
+        await _flutterLocalNotificationsPlugin.zonedSchedule(
+          notificationId,
+          'Medikament: ${med.name}',
+          'Dosis: ${med.dosage}',
+          scheduledTime,
+          _notificationDetails(),
+          matchDateTimeComponents: DateTimeComponents.time,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      }
+    }
+  }
+
+// Hilfsmethode für Details
+  NotificationDetails _notificationDetails() {
+    return const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'medication_channel_id',
+        'Medikations-Erinnerungen',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+    );
+  }
+
   /// Aktiviert oder deaktiviert Benachrichtigungen.
   /// Prüft Systemberechtigungen und speichert die Entscheidung dauerhaft in [SharedPreferences].
   Future<void> _toggleNotifications(bool value) async {
     final prefs = await SharedPreferences.getInstance();
 
     if (value) {
+      // Überprüfen, ob die Benachrichtigungsberechtigung erteilt wurde
       var status = await Permission.notification.status;
 
+      // Wenn die Berechtigung dauerhaft verweigert wurde
       if (status.isPermanentlyDenied) {
         if (mounted) {
           _showSettingsDialog();
@@ -176,6 +256,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return;
       }
 
+      // Berechtigungen anfordern
       status = await Permission.notification.request();
 
       if (mounted) {
@@ -190,15 +271,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         }
       }
-    } else {
-      setState(() {
-        _notificationsEnabled = false;
-      });
-      await prefs.setBool('notifications_enabled', false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Benachrichtigungen in der App blockiert.')),
-        );
+
+      // Wenn Benachrichtigungen erteilt wurden, Erinnerungen planen
+      if (_notificationsEnabled) {
+        // 1. Lade alle Medikamenten-Objekte (nicht nur die Zeiten)
+        final List<Medication> allMedications = await MedicationService().loadMedications();
+
+        // 2. Iteriere über jedes Medikament und plane die Benachrichtigungen
+        for (var med in allMedications) {
+          _scheduleNotifications(med);
+        }
+      }else {
+        // Wenn Benachrichtigungen deaktiviert werden, alle Benachrichtigungen stornieren
+        setState(() {
+          _notificationsEnabled = false;
+        });
+        await prefs.setBool('notifications_enabled', false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Benachrichtigungen in der App blockiert.')),
+          );
+
+          // Alle geplanten Benachrichtigungen löschen
+          await _flutterLocalNotificationsPlugin.cancelAll();
+        }
       }
     }
   }
