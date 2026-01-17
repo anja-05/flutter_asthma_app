@@ -219,7 +219,7 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                     : null,
               ),
               DropdownButtonFormField<String>(
-                value: _type,
+                initialValue: _type,
                 decoration: const InputDecoration(labelText: 'Typ'),
                 items: _types.map((type) =>
                     DropdownMenuItem(value: type, child: Text(type))).toList(),
@@ -238,7 +238,7 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                 ),
               ),
               DropdownButtonFormField<String>(
-                value: _frequencyType,
+                initialValue: _frequencyType,
                 decoration: const InputDecoration(labelText: 'Intervall'),
                 items: const [
                   DropdownMenuItem(value: 'daily', child: Text('Täglich')),
@@ -329,10 +329,11 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.remove_circle_outline, color: _times
-                          .length > 1 ? Colors.red : Colors.grey),
-                      onPressed: _times.length > 1 ? () =>
-                          _removeTimeField(index) : null,
+                      icon: Icon(Icons.remove_circle_outline,
+                          color: _times.length > 1 ? Colors.red : Colors.grey),
+                      onPressed: _times.length > 1
+                          ? () => _removeTimeField(index)
+                          : null,
                     ),
                   ],
                 );
@@ -590,14 +591,15 @@ class _MedicationScreenState extends State<MedicationScreen> {
       );
     }
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/dashboard',
-              (route) => false,
+          (route) => false,
         );
-        return false; // verhindert Standard-Zurücknavigation
       },
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
@@ -687,7 +689,7 @@ class _MedicationScreenState extends State<MedicationScreen> {
 
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.lightGreen.withOpacity(0.15),
+                    color: AppColors.lightGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.all(16),
@@ -713,7 +715,7 @@ class _MedicationScreenState extends State<MedicationScreen> {
                       Switch(
                         value: _remindersEnabled,
                         onChanged: _toggleReminders,
-                        activeColor: AppColors.primaryGreen,
+                        activeThumbColor: AppColors.primaryGreen,
                       ),
                     ],
                   ),

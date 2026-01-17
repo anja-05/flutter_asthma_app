@@ -85,6 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadMedicationTimes() async {
     final medicationService = MedicationService();
     final times = await medicationService.loadMedicationTimes();
+    if (!mounted) return;
     setState(() {
       _medicationTimes = times;
     });
@@ -101,6 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadLastEntryDate() async {
     final prefs = await SharedPreferences.getInstance();
     final lastEntryDate = prefs.getString('last_entry_date') ?? 'Kein Eintrag';
+    if (!mounted) return;
     setState(() {
       _lastEntryDate = lastEntryDate;
     });
@@ -110,6 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Die Einstellung wird aus [SharedPreferences] gelesen und im lokalen State gespeichert.
   Future<void> _loadNotificationPreference() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
     });
@@ -128,6 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Wird beim Initialisieren des Dashboards aufgerufen.
   Future<void> _loadUser() async {
     final user = await _authService.getCurrentUser();
+    if (!mounted) return;
     setState(() {
       _currentUser = user;
       _isLoading = false;
@@ -265,6 +269,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
         await prefs.setBool('notifications_enabled', status.isGranted);
 
+        if (!mounted) return;
         if (!status.isGranted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Benachrichtigungen wurden vom System abgelehnt.')),
@@ -462,17 +467,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   content: 'Puls: 72 bpm\nSauerstoff: 98%\nAtemfrequenz: 14/min',
                   onTap: () => _navigateToScreen('Vitaldaten'),
                 ),
-
                 const SizedBox(height: 24),
                 const Divider(),
                 const SizedBox(height: 16),
-
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -480,7 +489,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: Row(
                           children: [
-                            const Icon(Icons.notifications_active, color: AppColors.primaryGreen),
+                            const Icon(
+                              Icons.notifications_active,
+                              color: AppColors.primaryGreen,
+                            ),
                             const SizedBox(width: 12),
                             const Flexible(
                               child: Text(
@@ -495,7 +507,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Switch(
                         value: _notificationsEnabled,
                         onChanged: _toggleNotifications,
-                        activeColor: AppColors.primaryGreen,
+                        activeThumbColor: AppColors.primaryGreen,
                       ),
                     ],
                   ),
