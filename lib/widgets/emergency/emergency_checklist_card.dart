@@ -32,7 +32,7 @@ class EmergencyChecklistCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE53935).withOpacity(0.2),
+                  color: const Color(0xFFE53935).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: const Icon(

@@ -56,7 +56,7 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFFF5F5F5).withOpacity(0),
+            const Color(0xFFF5F5F5).withValues(alpha: 0),
             const Color(0xFFF5F5F5),
           ],
         ),
@@ -76,40 +76,39 @@ class _FloatingSOSButtonState extends State<FloatingSOSButton>
                     onPressed: widget.isActive
                         ? null
                         : () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('Notruf auslösen'),
-                          content: const Text(
-                            'Möchtest du wirklich den Notruf 112 auslösen?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () =>
-                                  Navigator.pop(context),
-                              child: const Text('Abbrechen'),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                            showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Notruf auslösen'),
+                                content: const Text(
+                                  'Möchtest du wirklich den Notruf 112 auslösen?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Abbrechen'),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      HapticFeedback.heavyImpact();
+                                      PhoneService.call('112');
+                                    },
+                                    child: const Text('SOS starten'),
+                                  ),
+                                ],
                               ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                                HapticFeedback.heavyImpact();
-                                PhoneService.call('112');
-                              },
-                              child: const Text('SOS starten'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                            );
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE53935),
                       foregroundColor: Colors.white,
                       elevation: 8,
                       shadowColor:
-                      const Color(0xFFE53935).withOpacity(0.5),
+                          const Color(0xFFE53935).withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(36),
                       ),

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:Asthma_Assist/widgets/symptom/symptom_history_card.dart';
-import 'package:Asthma_Assist/widgets/symptom/symptom_line_chart.dart';
-import 'package:Asthma_Assist/widgets/symptom/symptom_trigger_bar_chart.dart';
-
-
+import 'package:asthma_app/widgets/symptom/symptom_history_card.dart';
+import 'package:asthma_app/widgets/symptom/symptom_line_chart.dart';
+import 'package:asthma_app/widgets/symptom/symptom_trigger_bar_chart.dart';
 
 /// Tab zum Anzeigen des Symptomverlaufs der aktuellen Woche.
 ///
@@ -41,7 +39,7 @@ class SymptomHistoryTab extends StatelessWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final startOfWeek =
-    today.subtract(Duration(days: today.weekday - 1)); // Montag
+        today.subtract(Duration(days: today.weekday - 1)); // Montag
     final endOfWeek = startOfWeek.add(const Duration(days: 7)); // exklusiv
 
     return history.where((e) {
@@ -72,35 +70,25 @@ class SymptomHistoryTab extends StatelessWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-
-
         SymptomLineChart(history: data),
-
         const SizedBox(height: 32),
-
         const Text(
           'Trigger-Häufigkeit (diese Woche)',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-
-
         SizedBox(
           height: 220,
           child: SymptomTriggerBarChart(history: data),
         ),
-
         const SizedBox(height: 32),
-
         const Text(
           'Einträge',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-
-
         ...data.map(
-              (e) => Padding(
+          (e) => Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: SymptomHistoryCard(
               date: e['date'],

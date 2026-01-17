@@ -40,7 +40,7 @@ class AqiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      backgroundColor: _getAqiColor().withOpacity(0.1),
+      backgroundColor: _getAqiColor().withValues(alpha: 0.1),
       borderRadius: 12,
       padding: const EdgeInsets.all(16),
       onTap: onTap,
@@ -52,7 +52,7 @@ class AqiCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getAqiColor().withOpacity(0.2),
+                  color: _getAqiColor().withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -100,7 +100,7 @@ class AqiCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: _getAqiColor().withOpacity(0.2),
+                    color: _getAqiColor().withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -133,7 +133,7 @@ class AqiCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

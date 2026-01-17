@@ -49,7 +49,7 @@ class SymptomIntensitySlider extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
+          color: Colors.grey.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -81,7 +81,8 @@ class SymptomIntensitySlider extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _getColorForIntensity(intensity).withOpacity(0.2),
+                  color:
+                      _getColorForIntensity(intensity).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -100,9 +101,10 @@ class SymptomIntensitySlider extends StatelessWidget {
             data: SliderThemeData(
               activeTrackColor: _getColorForIntensity(intensity),
               inactiveTrackColor:
-              _getColorForIntensity(intensity).withOpacity(0.2),
+                  _getColorForIntensity(intensity).withValues(alpha: 0.2),
               thumbColor: _getColorForIntensity(intensity),
-              overlayColor: _getColorForIntensity(intensity).withOpacity(0.2),
+              overlayColor:
+                  _getColorForIntensity(intensity).withValues(alpha: 0.2),
               trackHeight: 6,
               thumbShape: const RoundSliderThumbShape(
                 enabledThumbRadius: 10,
@@ -127,7 +129,7 @@ class SymptomIntensitySlider extends StatelessWidget {
                       ? _getColorForIntensity(intensity)
                       : const Color(0xFF9E9E9E),
                   fontWeight:
-                  intensity == index ? FontWeight.bold : FontWeight.normal,
+                      intensity == index ? FontWeight.bold : FontWeight.normal,
                 ),
               );
             }),

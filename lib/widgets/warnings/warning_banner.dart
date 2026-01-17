@@ -49,7 +49,7 @@ class WarningBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: _getBackgroundColor().withOpacity(0.3),
+            color: _getBackgroundColor().withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -87,7 +87,7 @@ class WarningBanner extends StatelessWidget {
                         message,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],

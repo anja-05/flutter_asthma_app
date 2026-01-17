@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/medication.dart';
+import 'package:logger/logger.dart';
 
 class MedicationService {
+  final Logger _logger = Logger();
   static const _keyMedications = 'medicationList';
   static const _keyRemindersEnabled = 'remindersEnabled';
   static const _keyTodayIntakes = 'todayIntakeList';
@@ -25,8 +27,13 @@ class MedicationService {
     final jsonString = prefs.getString(_keyMedications);
 
     if (jsonString == null) return [];
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((json) => Medication.fromJson(json)).toList();
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList.map((json) => Medication.fromJson(json)).toList();
+    } catch (e) {
+      _logger.e('Error parsing medications JSON', error: e);
+      return [];
+    }
   }
 
   Future<void> saveMedications(List<Medication> medications) async {
@@ -52,8 +59,13 @@ class MedicationService {
 
     if (jsonString == null) return [];
 
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((json) => MedicationIntake.fromJson(json)).toList();
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList.map((json) => MedicationIntake.fromJson(json)).toList();
+    } catch (e) {
+      _logger.e('Error parsing today intakes JSON', error: e);
+      return [];
+    }
   }
 
   Future<void> saveTodayIntakes(List<MedicationIntake> intakes) async {
@@ -69,8 +81,15 @@ class MedicationService {
 
     if (jsonString == null) return [];
 
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((json) => PastMedicationIntake.fromJson(json)).toList();
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList
+          .map((json) => PastMedicationIntake.fromJson(json))
+          .toList();
+    } catch (e) {
+      _logger.e('Error parsing past intakes JSON', error: e);
+      return [];
+    }
   }
 
   Future<void> savePastIntakes(List<PastMedicationIntake> intakes) async {
@@ -89,6 +108,9 @@ class MedicationService {
 
   Future<void> saveLastAccessedDate() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyLastAccessedDate, DateTime.now().toIso8601String());
+    await prefs.setString(
+      _keyLastAccessedDate,
+      DateTime.now().toIso8601String(),
+    );
   }
 }

@@ -9,7 +9,6 @@ import 'symptom_history_tab.dart';
 import '../../services/auth_service.dart';
 import '../../services/fhir_observation_service.dart';
 
-
 /// Bildschirm für das Symptomtagebuch.
 ///
 /// Zeigt zwei Registerkarten an: Eine zum Eingeben neuer Symptome und eine zum
@@ -66,7 +65,8 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     String trend = "Weniger Anfälle";
     if (_history.length > 1) {
       final lastEntry = _history[1];
-      final lastIntensity = lastEntry['symptoms'].values.reduce((a, b) => a + b);
+      final lastIntensity =
+          lastEntry['symptoms'].values.reduce((a, b) => a + b);
       final currentIntensity = entry['symptoms'].values.reduce((a, b) => a + b);
 
       if (currentIntensity > lastIntensity) {
@@ -97,7 +97,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     }
   }
 
-
   /// Lädt die gespeicherte Historie aus dem persistenten Speicher.
   ///
   /// Liest die gespeicherte JSON‐Zeichenkette aus `SharedPreferences` und
@@ -125,91 +124,90 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-        onWillPop: () async {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/dashboard',
-            (route) => false,
-      );
-      return false;
-    },
-    child: Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: SafeArea(
-        child: DefaultTabController(
-          length: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Symptomtagebuch',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryGreen,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+          (route) => false,
+        );
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundColor,
+        body: SafeArea(
+          child: DefaultTabController(
+            length: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Symptomtagebuch',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryGreen,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Geben Sie Ihre Symtopme ein und beobachten Sie Ihre Symptomveränderungen in der Historie',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Geben Sie Ihre Symtopme ein und beobachten Sie Ihre Symptomveränderungen in der Historie',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Text(
-                          DateFormat(
-                            'EEEE, d. MMMM yyyy',
-                            'de_DE',
-                          ).format(DateTime.now()),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Text(
+                            DateFormat(
+                              'EEEE, d. MMMM yyyy',
+                              'de_DE',
+                            ).format(DateTime.now()),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(
-                          Icons.wb_sunny,
-                          size: 18,
-                          color: Colors.orangeAccent,
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.wb_sunny,
+                            size: 18,
+                            color: Colors.orangeAccent,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const TabBar(
+                  labelColor: Colors.black,
+                  indicatorColor: AppColors.primaryGreen,
+                  tabs: [
+                    Tab(text: 'Eintrag'),
+                    Tab(text: 'Verlauf'),
                   ],
                 ),
-              ),
-
-              const TabBar(
-                labelColor: Colors.black,
-                indicatorColor: AppColors.primaryGreen,
-                tabs: [
-                  Tab(text: 'Eintrag'),
-                  Tab(text: 'Verlauf'),
-                ],
-              ),
-
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    SymptomEntryTab(onSave: addEntry),
-                    SymptomHistoryTab(history: _history),
-                  ],
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      SymptomEntryTab(onSave: addEntry),
+                      SymptomHistoryTab(history: _history),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }

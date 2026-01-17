@@ -55,7 +55,7 @@ class FitbitService {
       return "Synchronisation fertig: $successCount/3 Werte gespeichert.";
 
     } catch (e) {
-      print("Fitbit Error: $e");
+      debugPrint("Fitbit Error: $e");
       return "Fehler bei der Verbindung: $e";
     }
   }
@@ -100,7 +100,7 @@ class FitbitService {
       }
       return false;
     } catch (e) {
-      print("Heart Rate Sync Error: $e");
+      debugPrint("Heart Rate Sync Error: $e");
       return false;
     }
   }
@@ -138,7 +138,7 @@ class FitbitService {
       }
       return false;
     } catch (e) {
-      print("SpO2 Sync Error: $e");
+      debugPrint("SpO2 Sync Error: $e");
       return false;
     }
   }
@@ -175,7 +175,7 @@ class FitbitService {
       }
       return false;
     } catch (e) {
-      print("Breathing Sync Error: $e");
+      debugPrint("Breathing Sync Error: $e");
       return false;
     }
   }

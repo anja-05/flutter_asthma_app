@@ -35,19 +35,19 @@ class ZoneIndicator extends StatelessWidget {
       height: isActive ? 50 : 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isActive ? color : color.withOpacity(0.3),
+        color: isActive ? color : color.withValues(alpha: 0.3),
         border: Border.all(
           color: color,
           width: isActive ? 3 : 2,
         ),
         boxShadow: isActive
             ? [
-          BoxShadow(
-            color: color.withOpacity(0.5),
-            blurRadius: 8,
-            spreadRadius: 2,
-          ),
-        ]
+                BoxShadow(
+                  color: color.withValues(alpha: 0.5),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ]
             : null,
       ),
       child: Center(

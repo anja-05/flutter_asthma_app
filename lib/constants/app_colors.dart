@@ -39,10 +39,10 @@ class AppColors {
 
   /// Hintergrundfarben für thematische Karten (mit Transparenz).
   /// Die Farben basieren auf dem jeweiligen Themenkontext (geringe Opacity für ruhiges Design).
-  static Color symptomCardBg = const Color(0xFF81C784).withOpacity(0.13);
-  static Color peakFlowCardBg = const Color(0xFF66BB6A).withOpacity(0.13);
-  static Color medicationCardBg = const Color(0xFF388E3C).withOpacity(0.13);
-  static Color warningCardBg = const Color(0xFF43A047).withOpacity(0.13);
-  static Color emergencyCardBg = const Color(0xFFD32F2F).withOpacity(0.13);
-  static Color vitalCardBg = const Color(0xFF26A69A).withOpacity(0.13);
+  static Color symptomCardBg = const Color(0xFF81C784).withValues(alpha: 0.13);
+  static Color peakFlowCardBg = const Color(0xFF66BB6A).withValues(alpha: 0.13);
+  static Color medicationCardBg = const Color(0xFF388E3C).withValues(alpha: 0.13);
+  static Color warningCardBg = const Color(0xFF43A047).withValues(alpha: 0.13);
+  static Color emergencyCardBg = const Color(0xFFD32F2F).withValues(alpha: 0.13);
+  static Color vitalCardBg = const Color(0xFF26A69A).withValues(alpha: 0.13);
 }

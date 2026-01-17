@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../models/peak_flow_measurement.dart';
 import '../widgets/peak_flow/peak_flow_chart.dart';
 import '../widgets/peak_flow/peak_flow_meter.dart';
-import '../widgets/peak_flow/zone_indicator.dart';
+
 import '../constants/app_colors.dart';
+
 /// Der Screen ist nur ein Beispiel wie er einmal auschauen könnte.
 /// Er ist nicht fertig impplementiert.
 /// Er dient nur zur Veranschaulichung
@@ -89,14 +89,15 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
   Widget build(BuildContext context) {
     final latest = measurements.last;
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/dashboard',
-              (route) => false,
+          (route) => false,
         );
-        return false;
       },
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
@@ -148,11 +149,11 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
                 data: measurements
                     .map(
                       (m) => PeakFlowData(
-                    date:
-                    '${m.dateTime.day.toString().padLeft(2, '0')}.${m.dateTime.month.toString().padLeft(2, '0')}',
-                    value: m.value.toDouble(),
-                  ),
-                )
+                        date:
+                            '${m.dateTime.day.toString().padLeft(2, '0')}.${m.dateTime.month.toString().padLeft(2, '0')}',
+                        value: m.value.toDouble(),
+                      ),
+                    )
                     .toList(),
                 personalBest: latest.personalBest.toDouble(),
               ),
@@ -181,7 +182,7 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -258,8 +259,10 @@ class _PeakFlowScreenState extends State<PeakFlowScreen> {
 class _ZoneInfo extends StatelessWidget {
   /// Farbe der Zone.
   final Color color;
+
   /// Titel der Zone.
   final String title;
+
   /// Beschreibung der Zone.
   final String description;
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../common/app_card.dart';
-import 'package:Asthma_Assist/services/phone_service.dart';
+import 'package:asthma_app/services/phone_service.dart';
 
 /// Zeigt eine Liste wichtiger Notfallkontakte an.
 /// Die Liste enthält persönliche Kontakte sowie eine feste Notrufnummer
@@ -64,7 +64,7 @@ class EmergencyContactList extends StatelessWidget {
               child: Divider(color: Color(0xFFBDBDBD)),
             ),
             ...contacts.map(
-                  (contact) => Padding(
+              (contact) => Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: _buildContact(context, contact),
               ),
@@ -94,7 +94,7 @@ class EmergencyContactList extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF4CAF50).withOpacity(0.2),
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(24),
           ),
           child: const Icon(

@@ -50,7 +50,7 @@ class SymptomTriggerBarChart extends StatelessWidget {
           horizontalInterval: 1, // ✅ nur ganze Schritte
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.grey.withOpacity(0.25),
+            color: Colors.grey.withValues(alpha: 0.25),
             strokeWidth: 1,
             dashArray: [4, 4],
           ),

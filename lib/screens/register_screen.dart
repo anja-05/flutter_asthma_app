@@ -26,22 +26,31 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   /// Schlüssel zur Verwaltung und Validierung des Formulars.
   final _formKey = GlobalKey<FormState>();
+
   /// Controller für den Vornamen.
   final _firstNameController = TextEditingController();
+
   /// Controller für den Nachnamen.
   final _lastNameController = TextEditingController();
+
   /// Controller für die E-Mail-Adresse.
   final _emailController = TextEditingController();
+
   /// Controller für das Passwort.
   final _passwordController = TextEditingController();
+
   /// Controller für die Passwort-Bestätigung.
   final _confirmPasswordController = TextEditingController();
+
   /// Service zur Benutzerregistrierung.
   final _authService = AuthService();
+
   /// Gibt an, ob gerade ein Registrierungsvorgang läuft.
   bool _isLoading = false;
+
   /// Steuert, ob das Passwort verdeckt angezeigt wird.
   bool _obscurePassword = true;
+
   /// Steuert, ob das Bestätigungs-Passwort verdeckt angezeigt wird.
   bool _obscureConfirmPassword = true;
 
@@ -80,7 +89,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registrierung erfolgreich! Bitte melden Sie sich an.'),
+            content:
+                Text('Registrierung erfolgreich! Bitte melden Sie sich an.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -90,7 +100,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registrierung fehlgeschlagen. Email bereits vorhanden?'),
+            content:
+                Text('Registrierung fehlgeschlagen. Email bereits vorhanden?'),
             backgroundColor: Colors.red,
           ),
         );
@@ -123,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.2),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -204,9 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 16),
-
                           TextFormField(
                             controller: _lastNameController,
                             decoration: InputDecoration(
@@ -243,9 +252,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 16),
-
                           TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -286,9 +293,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 16),
-
                           TextFormField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
@@ -342,9 +347,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 16),
-
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirmPassword,
@@ -364,7 +367,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
                                   });
                                 },
                               ),
@@ -398,9 +402,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 24),
-
                           ElevatedButton(
                             onPressed: _isLoading ? null : _handleRegister,
                             style: ElevatedButton.styleFrom(
@@ -414,20 +416,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             child: _isLoading
                                 ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
                                 : const Text(
-                              'Konto erstellen',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                                    'Konto erstellen',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                           ),
                         ],
                       ),
@@ -442,7 +444,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
               ],

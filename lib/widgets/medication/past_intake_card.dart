@@ -34,7 +34,7 @@ class PastIntakeCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.lightGreen.withOpacity(0.25),
+              color: AppColors.lightGreen.withValues(alpha: 0.25),
               shape: BoxShape.circle,
             ),
             child: const Icon(

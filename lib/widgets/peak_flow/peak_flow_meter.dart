@@ -61,13 +61,13 @@ class PeakFlowMeter extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: currentValue / 600,
                   strokeWidth: 20,
-                  backgroundColor: Colors.grey.withOpacity(0.1),
+                  backgroundColor: Colors.grey.withValues(alpha: 0.1),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     _getZone() == PeakFlowZone.green
                         ? const Color(0xFF4CAF50)
                         : _getZone() == PeakFlowZone.yellow
-                        ? const Color(0xFFFFC107)
-                        : const Color(0xFFF44336),
+                            ? const Color(0xFFFFC107)
+                            : const Color(0xFFF44336),
                   ),
                 ),
               ),

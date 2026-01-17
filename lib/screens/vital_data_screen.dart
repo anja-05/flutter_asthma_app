@@ -25,7 +25,7 @@ class _VitalScreenState extends State<VitalScreen> {
   final FhirVitalService _fhirService = FhirVitalService();
 
   int selectedTabIndex = 0;
-  bool _isLoading = true;
+
   // Platzhalter-Werte, die sofort durch den Cache überschrieben werden.
   String _currentPulse = "--";
   String _currentO2 = "--";
@@ -37,10 +37,24 @@ class _VitalScreenState extends State<VitalScreen> {
 
   // Statische Mock-Daten für die Historien-Liste (wegen Implementierungsproblemen nicht dynamisch geladen).
   final List<VitalEntry> history = [
-    VitalEntry(date: '21.10.2025', time: '18:00', pulse: 72, oxygen: 98, breath: 14),
-    VitalEntry(date: '21.10.2025', time: '12:00', pulse: 75, oxygen: 98, breath: 14, trendUp: true),
-    VitalEntry(date: '20.10.2025', time: '18:00', pulse: 70, oxygen: 97, breath: 15, trendDown: true),
-    VitalEntry(date: '20.10.2025', time: '12:00', pulse: 73, oxygen: 98, breath: 14),
+    VitalEntry(
+        date: '21.10.2025', time: '18:00', pulse: 72, oxygen: 98, breath: 14),
+    VitalEntry(
+        date: '21.10.2025',
+        time: '12:00',
+        pulse: 75,
+        oxygen: 98,
+        breath: 14,
+        trendUp: true),
+    VitalEntry(
+        date: '20.10.2025',
+        time: '18:00',
+        pulse: 70,
+        oxygen: 97,
+        breath: 15,
+        trendDown: true),
+    VitalEntry(
+        date: '20.10.2025', time: '12:00', pulse: 73, oxygen: 98, breath: 14),
   ];
 
   @override
@@ -69,7 +83,6 @@ class _VitalScreenState extends State<VitalScreen> {
         _currentPulse = prefs.getString('cache_pulse') ?? "--";
         _currentO2 = prefs.getString('cache_o2') ?? "--";
         _currentBreath = prefs.getString('cache_breath') ?? "--";
-        _isLoading = false;
       });
     }
   }
@@ -121,9 +134,7 @@ class _VitalScreenState extends State<VitalScreen> {
         final date = item['time'] as DateTime;
         final val = item['value'] as double;
         return VitalChartData(
-          time: DateFormat('HH:mm').format(date),
-            value: val
-        );
+            time: DateFormat('HH:mm').format(date), value: val);
       }).toList();
 
       if (newChartData.isEmpty) {
@@ -136,14 +147,11 @@ class _VitalScreenState extends State<VitalScreen> {
           _currentO2 = results[1];
           _currentBreath = results[2];
           _chartData = newChartData.reversed.toList();
-          _isLoading = false;
         });
       }
     } catch (e) {
-      print("Fehler beim Laden der Vitaldaten: $e");
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      debugPrint("Fehler beim Laden der Vitaldaten: $e");
+      if (mounted) {}
     }
   }
 
@@ -176,52 +184,53 @@ class _VitalScreenState extends State<VitalScreen> {
           code: FhirVitalService.codeHeartRate,
           display: "Heart Rate",
           value: fakePulse,
-          unit: "bpm"
-      );
+          unit: "bpm");
 
       await _fhirService.saveVital(
           code: FhirVitalService.codeOxygen,
           display: "Oxygen Saturation",
           value: fakeO2,
-          unit: "%"
-      );
+          unit: "%");
 
       await _fhirService.saveVital(
           code: FhirVitalService.codeRespiratoryRate,
           display: "Respiratory Rate",
           value: fakeBreath,
-          unit: "/min"
-      );
+          unit: "/min");
 
       // Aktualisiere die UI
       await _fetchAndSaveNetworkData();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(
-              'Demo-Werte gespeichert: ${fakePulse.toInt()} bpm')),
+          SnackBar(
+              content:
+                  Text('Demo-Werte gespeichert: ${fakePulse.toInt()} bpm')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: $e')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final today =
-    DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now());
+        DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now());
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/dashboard',
-              (route) => false,
+          (route) => false,
         );
-        return false;
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF9FCF9),
@@ -243,13 +252,14 @@ class _VitalScreenState extends State<VitalScreen> {
                 const SizedBox(height: 8),
                 const Text(
                   'Erfasse oder synchronisiere deine Vitalwerte und behalte deinen Verlauf im Blick.',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   today,
-                  style:
-                  const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                      fontSize: 14, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 24),
 
@@ -319,8 +329,7 @@ class _VitalScreenState extends State<VitalScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline,
-                          color: Colors.amber.shade800),
+                      Icon(Icons.info_outline, color: Colors.amber.shade800),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -391,23 +400,23 @@ class _VitalScreenState extends State<VitalScreen> {
                   unit: selectedTabIndex == 0
                       ? 'bpm'
                       : selectedTabIndex == 1
-                      ? '%'
-                      : '/min',
+                          ? '%'
+                          : '/min',
                   color: selectedTabIndex == 0
                       ? const Color(0xFFD32F2F)
                       : selectedTabIndex == 1
-                      ? const Color(0xFF2196F3)
-                      : const Color(0xFF388E3C),
+                          ? const Color(0xFF2196F3)
+                          : const Color(0xFF388E3C),
                   minY: selectedTabIndex == 0
                       ? 40
                       : selectedTabIndex == 1
-                      ? 80
-                      : 0,
+                          ? 80
+                          : 0,
                   maxY: selectedTabIndex == 0
                       ? 100
                       : selectedTabIndex == 1
-                      ? 100
-                      : 40,
+                          ? 100
+                          : 40,
                 ),
 
                 const SizedBox(height: 24),
@@ -444,13 +453,11 @@ class _VitalScreenState extends State<VitalScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _addManualMeasurement,
                     icon: const Icon(Icons.add_circle_outline),
-                    label:
-                    const Text('Manuelle Messung (nur für Demo)'),
+                    label: const Text('Manuelle Messung (nur für Demo)'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF388E3C),
                       foregroundColor: Colors.white,
-                      padding:
-                      const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -479,7 +486,8 @@ class _VitalScreenState extends State<VitalScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(entry.date, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(entry.date,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               Text(entry.time, style: const TextStyle(color: Colors.grey)),
             ],
@@ -507,7 +515,8 @@ class _VitalScreenState extends State<VitalScreen> {
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF388E3C)),
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, color: Color(0xFF388E3C)),
         ),
       ],
     );

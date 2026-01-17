@@ -31,18 +31,16 @@ class SymptomLineChart extends StatelessWidget {
               maxX: 6,
               minY: 0,
               maxY: 5,
-
               gridData: FlGridData(
                 show: true,
                 horizontalInterval: 1,
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (value) => FlLine(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withValues(alpha: 0.2),
                   strokeWidth: 1,
                   dashArray: [4, 4],
                 ),
               ),
-
               titlesData: FlTitlesData(
                 rightTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
@@ -50,7 +48,6 @@ class SymptomLineChart extends StatelessWidget {
                 topTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
-
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
@@ -65,7 +62,6 @@ class SymptomLineChart extends StatelessWidget {
                     },
                   ),
                 ),
-
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
@@ -84,13 +80,12 @@ class SymptomLineChart extends StatelessWidget {
                   ),
                 ),
               ),
-
               borderData: FlBorderData(show: false),
-
               lineBarsData: [
                 _line(_spotsForWeek(weekDays, 'Atemnot'), atemnotColor),
                 _line(_spotsForWeek(weekDays, 'Husten'), hustenColor),
-                _line(_spotsForWeek(weekDays, 'Pfeifende Atmung'), pfeifenColor),
+                _line(
+                    _spotsForWeek(weekDays, 'Pfeifende Atmung'), pfeifenColor),
               ],
             ),
           ),
@@ -140,7 +135,7 @@ class SymptomLineChart extends StatelessWidget {
       // Wenn du pro Tag mehrere Einträge hast:
       // -> hier wird der "erste" genommen (bei dir meist der neueste, wenn _history vorne insertt).
       final entry = history.firstWhere(
-            (e) => e['date'] == dateKey,
+        (e) => e['date'] == dateKey,
         orElse: () => {},
       );
 

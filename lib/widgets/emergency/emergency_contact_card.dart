@@ -40,7 +40,7 @@ class EmergencyContactCard extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: const Color(0xFFFF9800).withOpacity(0.2),
+              color: const Color(0xFFFF9800).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(25),
             ),
             child: const Icon(

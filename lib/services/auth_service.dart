@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user.dart';
-import 'package:Asthma_Assist/services/fhir_patient_service.dart';
+import 'package:asthma_app/services/fhir_patient_service.dart';
+import 'package:logger/logger.dart';
 
 /// AuthService ist ein Service, der die Benutzer-Authentifizierung und das Management des Benutzerprofils über Firebase Auth und Firestore übernimmt.
 /// Dieser Service verwaltet alle relevanten Authentifizierungsoperationen wie Registrierung, Login, Logout und die Verwaltung des aktuellen Benutzers.
@@ -11,6 +12,7 @@ import 'package:Asthma_Assist/services/fhir_patient_service.dart';
 class AuthService {
   final fb_auth.FirebaseAuth _auth = fb_auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Logger _logger = Logger();
 
   /// Firebase Auth-State-Stream (für AuthWrapper):
   /// Dieser Stream gibt den Authentifizierungsstatus des Benutzers zurück (z. B. ob der Benutzer eingeloggt ist).
@@ -53,9 +55,11 @@ class AuthService {
       await _auth.signOut();
 
       return true;
-    } on fb_auth.FirebaseAuthException {
+    } on fb_auth.FirebaseAuthException catch (e) {
+      _logger.w("Firebase Auth Error during registration", error: e);
       return false;
-    } catch (_) {
+    } catch (e) {
+      _logger.e("General Error during registration", error: e);
       return false;
     }
   }
@@ -104,8 +108,11 @@ class AuthService {
 
       final updatedDoc = await docRef.get();
       return AppUser.fromMap(uid, updatedDoc.data()!);
-
-    } on fb_auth.FirebaseAuthException {
+    } on fb_auth.FirebaseAuthException catch (e) {
+      _logger.w("Firebase Auth Error during login", error: e);
+      return null;
+    } catch (e) {
+      _logger.e("General Error during login", error: e);
       return null;
     }
   }
@@ -125,14 +132,17 @@ class AuthService {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser == null) return null;
 
-    final doc = await _firestore
-        .collection('users')
-        .doc(firebaseUser.uid)
-        .get();
+    try {
+      final doc =
+          await _firestore.collection('users').doc(firebaseUser.uid).get();
 
-    if (!doc.exists) return null;
+      if (!doc.exists) return null;
 
-    return AppUser.fromMap(firebaseUser.uid, doc.data()!);
+      return AppUser.fromMap(firebaseUser.uid, doc.data()!);
+    } catch (e) {
+      _logger.e("Error loading current user", error: e);
+      return null;
+    }
   }
 
   /// Gibt `true` zurück, wenn der Benutzer derzeit eingeloggt ist, andernfalls `false`.

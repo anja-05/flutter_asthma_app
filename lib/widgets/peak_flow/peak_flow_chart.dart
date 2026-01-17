@@ -47,7 +47,7 @@ class PeakFlowChart extends StatelessWidget {
                   horizontalInterval: 100,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
-                      color: Colors.grey.withOpacity(0.2),
+                      color: Colors.grey.withValues(alpha: 0.2),
                       strokeWidth: 1,
                     );
                   },
@@ -66,8 +66,7 @@ class PeakFlowChart extends StatelessWidget {
                       reservedSize: 30,
                       interval: 1,
                       getTitlesWidget: (double value, TitleMeta meta) {
-                        if (value.toInt() >= 0 &&
-                            value.toInt() < data.length) {
+                        if (value.toInt() >= 0 && value.toInt() < data.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
@@ -103,7 +102,7 @@ class PeakFlowChart extends StatelessWidget {
                 borderData: FlBorderData(
                   show: true,
                   border: Border.all(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withValues(alpha: 0.2),
                   ),
                 ),
                 minX: 0,
@@ -136,8 +135,8 @@ class PeakFlowChart extends StatelessWidget {
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF4CAF50).withOpacity(0.3),
-                          const Color(0xFF4CAF50).withOpacity(0.0),
+                          const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                          const Color(0xFF4CAF50).withValues(alpha: 0.0),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,

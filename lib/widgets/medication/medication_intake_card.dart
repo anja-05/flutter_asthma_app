@@ -32,7 +32,7 @@ class MedicationIntakeCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: AppColors.lightGreen.withOpacity(0.25),
+              color: AppColors.lightGreen.withValues(alpha: 0.25),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -103,18 +103,18 @@ class MedicationIntakeCard extends StatelessWidget {
               // 2. STATUS ICON
               taken
                   ? const Icon(
-                Icons.check_circle,
-                color: AppColors.primaryGreen,
-                size: 26,
-              )
+                      Icons.check_circle,
+                      color: AppColors.primaryGreen,
+                      size: 26,
+                    )
                   : GestureDetector(
-                onTap: onMarkAsTaken,
-                child: const Icon(
-                  Icons.schedule,
-                  color: AppColors.textSecondary,
-                  size: 26,
-                ),
-              ),
+                      onTap: onMarkAsTaken,
+                      child: const Icon(
+                        Icons.schedule,
+                        color: AppColors.textSecondary,
+                        size: 26,
+                      ),
+                    ),
             ],
           ),
         ],

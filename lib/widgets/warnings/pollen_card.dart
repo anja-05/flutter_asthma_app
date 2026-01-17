@@ -68,7 +68,7 @@ class PollenCard extends StatelessWidget {
     final maxLevel = pollenLevels.values.reduce((a, b) => a > b ? a : b);
 
     return AppCard(
-      backgroundColor: _getLevelColor(maxLevel).withOpacity(0.1),
+      backgroundColor: _getLevelColor(maxLevel).withValues(alpha: 0.1),
       borderRadius: 12,
       padding: const EdgeInsets.all(16),
       onTap: onTap,
@@ -80,7 +80,7 @@ class PollenCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getLevelColor(maxLevel).withOpacity(0.2),
+                  color: _getLevelColor(maxLevel).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -129,7 +129,7 @@ class PollenCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _getLevelColor(maxLevel).withOpacity(0.2),
+                  color: _getLevelColor(maxLevel).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -173,7 +173,7 @@ class PollenCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: index < entry.value
                               ? _getLevelColor(entry.value)
-                              : Colors.grey.withOpacity(0.2),
+                              : Colors.grey.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );

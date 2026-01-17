@@ -5,8 +5,6 @@ import '../../constants/app_colors.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/symptom/symptom_intensity_slider.dart';
 
-
-
 /// Registerkarte für das Erfassen eines Symptomtagebuch‑Eintrags.
 ///
 /// Diese StatefulWidget zeigt Eingabefelder und Schieberegler an, über die der
@@ -92,8 +90,7 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
       child: OutlinedButton(
         onPressed: () => setState(() => _mood = value),
         style: OutlinedButton.styleFrom(
-          backgroundColor:
-          selected ? AppColors.primaryGreen : Colors.white,
+          backgroundColor: selected ? AppColors.primaryGreen : Colors.white,
           side: BorderSide(color: AppColors.primaryGreen),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -138,8 +135,7 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
       ),
       child: Row(
         children: [
-          if (icon != null)
-            Icon(icon, color: AppColors.primaryGreen, size: 18),
+          if (icon != null) Icon(icon, color: AppColors.primaryGreen, size: 18),
           if (icon != null) const SizedBox(width: 8),
           Expanded(child: Text(label)),
           Row(
@@ -161,10 +157,8 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor:
-        active ? AppColors.primaryGreen : Colors.white,
-        foregroundColor:
-        active ? Colors.white : AppColors.primaryGreen,
+        backgroundColor: active ? AppColors.primaryGreen : Colors.white,
+        foregroundColor: active ? Colors.white : AppColors.primaryGreen,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         shape: RoundedRectangleBorder(
@@ -190,10 +184,8 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
         'Pfeifende Atmung': _pfeifend,
         for (var s in _additionalSymptoms) s['name']: s['intensity'],
       },
-      'trigger': _triggers.entries
-          .where((e) => e.value)
-          .map((e) => e.key)
-          .join(', '),
+      'trigger':
+          _triggers.entries.where((e) => e.value).map((e) => e.key).join(', '),
       'notes': _notesController.text,
     });
 
@@ -221,7 +213,6 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
             ),
           ),
           const SizedBox(height: 24),
-
           AppCard(
             backgroundColor: AppColors.veryLightGreen,
             child: Column(
@@ -247,9 +238,7 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           _sectionTitle('Kernsymptome'),
           const SizedBox(height: 8),
           AppCard(
@@ -294,9 +283,7 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           _sectionTitle('Mögliche Auslöser heute'),
           const SizedBox(height: 8),
           AppCard(
@@ -311,9 +298,8 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
                       label: Text(t),
                       selected: _triggers[t]!,
                       selectedColor:
-                      AppColors.primaryGreen.withOpacity(0.2),
-                      onSelected: (v) =>
-                          setState(() => _triggers[t] = v),
+                          AppColors.primaryGreen.withValues(alpha: 0.2),
+                      onSelected: (v) => setState(() => _triggers[t] = v),
                     );
                   }).toList(),
                 ),
@@ -322,16 +308,15 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
                   controller: _notesController,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                    hintText: "z. B. 'Heute viel gelaufen', 'Wetter sehr kalt' …",
+                    hintText:
+                        "z. B. 'Heute viel gelaufen', 'Wetter sehr kalt' …",
                     border: InputBorder.none,
                   ),
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           _sectionTitle('Weitere Symptome hinzufügen'),
           const SizedBox(height: 8),
           AppCard(
@@ -347,29 +332,31 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
                 Row(
                   children: ['Selten', 'Gelegentlich', 'Häufig']
                       .map((f) => Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ElevatedButton(
-                        onPressed: () => setState(() => _newSymptomFrequency = f),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _newSymptomFrequency == f
-                              ? AppColors.primaryGreen
-                              : Colors.white,
-                          foregroundColor: _newSymptomFrequency == f
-                              ? Colors.white
-                              : AppColors.primaryGreen,
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          f,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ))
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              child: ElevatedButton(
+                                onPressed: () =>
+                                    setState(() => _newSymptomFrequency = f),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _newSymptomFrequency == f
+                                      ? AppColors.primaryGreen
+                                      : Colors.white,
+                                  foregroundColor: _newSymptomFrequency == f
+                                      ? Colors.white
+                                      : AppColors.primaryGreen,
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  f,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ))
                       .toList(),
                 ),
                 const SizedBox(height: 12),
@@ -382,8 +369,8 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
                         'intensity': _newSymptomFrequency == 'Selten'
                             ? 1
                             : _newSymptomFrequency == 'Gelegentlich'
-                            ? 2
-                            : 3,
+                                ? 2
+                                : 3,
                       });
                       _newSymptomCtrl.clear();
                     });
@@ -396,9 +383,7 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -431,8 +416,8 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
         final frequency = s['intensity'] == 1
             ? 'Selten'
             : s['intensity'] == 2
-            ? 'Gelegentlich'
-            : 'Häufig';
+                ? 'Gelegentlich'
+                : 'Häufig';
 
         return Container(
           margin: const EdgeInsets.only(top: 8),

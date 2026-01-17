@@ -27,16 +27,24 @@ class _WarningScreenState extends State<WarningScreen> {
   String? _error;
 
   @override
-  void initState() { super.initState(); _fetchData(); }
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
 
   Future<void> _fetchData() async {
     if (!mounted) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final pos = await _determinePos();
-      final raw = await http.get(Uri.parse('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${pos.latitude}&longitude=${pos.longitude}&current=european_aqi,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen,alder_pollen,mugwort_pollen&hourly=european_aqi,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen,alder_pollen,mugwort_pollen&timezone=auto&forecast_days=7'));
+      final raw = await http.get(Uri.parse(
+          'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${pos.latitude}&longitude=${pos.longitude}&current=european_aqi,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen,alder_pollen,mugwort_pollen&hourly=european_aqi,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen,alder_pollen,mugwort_pollen&timezone=auto&forecast_days=7'));
 
-      if (raw.statusCode != 200) throw Exception('API Error: ${raw.statusCode}');
+      if (raw.statusCode != 200)
+        throw Exception('API Error: ${raw.statusCode}');
       final data = json.decode(raw.body);
 
       if (!mounted) return;
@@ -46,20 +54,27 @@ class _WarningScreenState extends State<WarningScreen> {
         _loading = false;
       });
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString().replaceAll('Exception: ', ''); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString().replaceAll('Exception: ', '');
+          _loading = false;
+        });
     }
   }
 
   double _d(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
 
   Map<String, dynamic> _processCurrent(Map<String, dynamic> c) => {
-    'AQI': (c['european_aqi'] as num?)?.toInt() ?? 0,
-    'pollen': {
-      'tree': [c['birch_pollen'], c['alder_pollen'], c['olive_pollen']].map(_d).reduce(max),
-      'grass': _d(c['grass_pollen']),
-      'weed': [c['ragweed_pollen'], c['mugwort_pollen']].map(_d).reduce(max),
-    }
-  };
+        'AQI': (c['european_aqi'] as num?)?.toInt() ?? 0,
+        'pollen': {
+          'tree': [c['birch_pollen'], c['alder_pollen'], c['olive_pollen']]
+              .map(_d)
+              .reduce(max),
+          'grass': _d(c['grass_pollen']),
+          'weed':
+              [c['ragweed_pollen'], c['mugwort_pollen']].map(_d).reduce(max),
+        }
+      };
 
   List<dynamic> _processForecast(Map<String, dynamic> h) {
     final timeList = h['time'] as List;
@@ -105,14 +120,28 @@ class _WarningScreenState extends State<WarningScreen> {
   Future<Position> _determinePos() async {
     if (!await Geolocator.isLocationServiceEnabled()) throw 'Standort aus';
     var p = await Geolocator.checkPermission();
-    if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
-    if (p == LocationPermission.deniedForever || p == LocationPermission.denied) throw 'Keine Berechtigung';
+    if (p == LocationPermission.denied)
+      p = await Geolocator.requestPermission();
+    if (p == LocationPermission.deniedForever || p == LocationPermission.denied)
+      throw 'Keine Berechtigung';
     return await Geolocator.getCurrentPosition();
   }
 
-  int _risk(double v) => v < 10 ? 1 : v < 30 ? 2 : v < 100 ? 3 : 4;
+  int _risk(double v) => v < 10
+      ? 1
+      : v < 30
+          ? 2
+          : v < 100
+              ? 3
+              : 4;
 
-  static const _colors = [Colors.grey, Color(0xFF4CAF50), Color(0xFFFFC107), Color(0xFFFF9800), Color(0xFFF44336)];
+  static const _colors = [
+    Colors.grey,
+    Color(0xFF4CAF50),
+    Color(0xFFFFC107),
+    Color(0xFFFF9800),
+    Color(0xFFF44336)
+  ];
   static const _texts = ['N/A', 'Gering', 'Mittel', 'Hoch', 'Sehr hoch'];
 
   Future<void> _showNotification() async {
@@ -120,41 +149,49 @@ class _WarningScreenState extends State<WarningScreen> {
     final bool isEnabledInApp = prefs.getBool('notifications_enabled') ?? false;
 
     if (!isEnabledInApp) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Benachrichtigungen sind in der App blockiert.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Benachrichtigungen sind in der App blockiert.')));
       return;
     }
 
     final status = await Permission.notification.status;
     if (!status.isGranted) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Benachrichtigungen sind im System deaktiviert.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Benachrichtigungen sind im System deaktiviert.')));
       return;
     }
 
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'test_channel', 'Test Notifications',
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'test_channel',
+      'Test Notifications',
       channelDescription: 'Channel for test notifications',
-      importance: Importance.max, priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.high,
     );
     await flutterLocalNotificationsPlugin.show(
-      0, 'Asthma-Warnung Test', 'Dies ist eine Test-Benachrichtigung für deine Luftqualität.',
+      0,
+      'Asthma-Warnung Test',
+      'Dies ist eine Test-Benachrichtigung für deine Luftqualität.',
       const NotificationDetails(android: androidPlatformChannelSpecifics),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final today =
-    DateFormat('EEEE, dd. MMMM yyyy', 'de_DE').format(DateTime.now());
     final aqi = _current?['AQI'] ?? 0;
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/dashboard',
-              (route) => false,
+          (route) => false,
         );
-        return false;
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF9FCF9),
@@ -164,188 +201,178 @@ class _WarningScreenState extends State<WarningScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                ? _buildError()
-                : ListView(
-              padding:
-              const EdgeInsets.fromLTRB(20, 20, 20, 40),
-              children: [
-                const Text(
-                  'Warnungen',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Hier findest du aktuelle Warnungen zur Luftqualität und Pollenbelastung in deiner Region.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  DateFormat('EEEE, d. MMMM', 'de_DE')
-                      .format(DateTime.now()),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 24),
+                    ? _buildError()
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                        children: [
+                          const Text(
+                            'Warnungen',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryGreen,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Hier findest du aktuelle Warnungen zur Luftqualität und Pollenbelastung in deiner Region.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            DateFormat('EEEE, d. MMMM', 'de_DE')
+                                .format(DateTime.now()),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          if (aqi > 60)
+                            WarningBanner(
+                              title: aqi > 80
+                                  ? 'Hohe Belastung'
+                                  : 'Mäßige Belastung',
+                              message: aqi > 80
+                                  ? 'Kein Sport im Freien.'
+                                  : 'Vorsicht bei Empfindlichkeit.',
+                              severity: aqi > 80
+                                  ? WarningSeverity.danger
+                                  : WarningSeverity.warning,
+                            )
+                          else
+                            const WarningBanner(
+                              title: 'Gute Luft',
+                              message: 'Alles okay.',
+                              severity: WarningSeverity.info,
+                            ),
+                          const SizedBox(height: 16),
+                          AqiCard(
+                            aqiValue: aqi,
+                            category: aqi <= 40
+                                ? 'Gut'
+                                : aqi <= 70
+                                    ? 'Mäßig'
+                                    : 'Schlecht',
+                          ),
+                          const SizedBox(height: 16),
+                          PollenCard(pollenLevels: {
+                            'Bäume': _risk(_current!['pollen']['tree']),
+                            'Gräser': _risk(_current!['pollen']['grass']),
+                            'Kräuter': _risk(_current!['pollen']['weed']),
+                          }),
+                          const SizedBox(height: 24),
+                          const Text(
+                            '5-Tage-Vorhersage',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF388E3C),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (_forecast == null || _forecast!.isEmpty)
+                            const Text('Keine Daten')
+                          else
+                            AppCard(
+                              child: Column(
+                                children: List.generate(
+                                  _forecast!.length,
+                                  (i) {
+                                    final f = _forecast![i];
+                                    final maxP = [
+                                      (f['pollen']['tree'] as num).toDouble(),
+                                      (f['pollen']['grass'] as num).toDouble(),
+                                      (f['pollen']['weed'] as num).toDouble()
+                                    ].reduce(max);
 
-                if (aqi > 60)
-                  WarningBanner(
-                    title:
-                    aqi > 80 ? 'Hohe Belastung' : 'Mäßige Belastung',
-                    message: aqi > 80
-                        ? 'Kein Sport im Freien.'
-                        : 'Vorsicht bei Empfindlichkeit.',
-                    severity: aqi > 80
-                        ? WarningSeverity.danger
-                        : WarningSeverity.warning,
-                  )
-                else
-                  const WarningBanner(
-                    title: 'Gute Luft',
-                    message: 'Alles okay.',
-                    severity: WarningSeverity.info,
-                  ),
+                                    final r = _risk(maxP);
 
-                const SizedBox(height: 16),
-                AqiCard(
-                  aqiValue: aqi,
-                  category: aqi <= 40
-                      ? 'Gut'
-                      : aqi <= 70
-                      ? 'Mäßig'
-                      : 'Schlecht',
-                ),
-                const SizedBox(height: 16),
-
-                PollenCard(pollenLevels: {
-                  'Bäume':
-                  _risk(_current!['pollen']['tree']),
-                  'Gräser':
-                  _risk(_current!['pollen']['grass']),
-                  'Kräuter':
-                  _risk(_current!['pollen']['weed']),
-                }),
-
-                const SizedBox(height: 24),
-                const Text(
-                  '5-Tage-Vorhersage',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF388E3C),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                if (_forecast == null || _forecast!.isEmpty)
-                  const Text('Keine Daten')
-                else
-                  AppCard(
-                    child: Column(
-                      children: List.generate(
-                        _forecast!.length,
-                            (i) {
-                          final f = _forecast![i];
-                          final maxP = [
-                            (f['pollen']['tree'] as num)
-                                .toDouble(),
-                            (f['pollen']['grass'] as num)
-                                .toDouble(),
-                            (f['pollen']['weed'] as num)
-                                .toDouble()
-                          ].reduce(max);
-
-                          final r = _risk(maxP);
-
-                          return Container(
-                            padding:
-                            const EdgeInsets.all(12),
-                            decoration: i <
-                                _forecast!.length - 1
-                                ? BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Colors
-                                      .grey.shade200,
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: i < _forecast!.length - 1
+                                          ? BoxDecoration(
+                                              border: Border(
+                                                bottom: BorderSide(
+                                                  color: Colors.grey.shade200,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                      child: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 85,
+                                            child: Text(
+                                              DateFormat(
+                                                'EEE, dd.MM.',
+                                                'de_DE',
+                                              ).format(f['date']),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          _miniIcon(
+                                            Icons.air,
+                                            _getAqiColor(f['AQI']),
+                                            'AQI ${f['AQI']}',
+                                          ),
+                                          const SizedBox(width: 16),
+                                          _miniIcon(
+                                            Icons.local_florist,
+                                            _colors[r],
+                                            _texts[r],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
-                            )
-                                : null,
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 85,
-                                  child: Text(
-                                    DateFormat(
-                                      'EEE, dd.MM.',
-                                      'de_DE',
-                                    ).format(f['date']),
-                                    style: const TextStyle(
-                                      fontWeight:
-                                      FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                const Spacer(),
-                                _miniIcon(
-                                  Icons.air,
-                                  _getAqiColor(f['AQI']),
-                                  'AQI ${f['AQI']}',
-                                ),
-                                const SizedBox(width: 16),
-                                _miniIcon(
-                                  Icons.local_florist,
-                                  _colors[r],
-                                  _texts[r],
-                                ),
-                              ],
                             ),
-                          );
-                        },
+                          const SizedBox(height: 32),
+                          ElevatedButton.icon(
+                            onPressed: _showNotification,
+                            icon: const Icon(Icons.notifications_active),
+                            label: const Text('Test-Benachrichtigung senden'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF388E3C),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-
-                const SizedBox(height: 32),
-                ElevatedButton.icon(
-                  onPressed: _showNotification,
-                  icon: const Icon(
-                      Icons.notifications_active),
-                  label: const Text(
-                      'Test-Benachrichtigung senden'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                    const Color(0xFF388E3C),
-                    foregroundColor: Colors.white,
-                    padding:
-                    const EdgeInsets.symmetric(
-                        vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildError() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-    Text('Fehler: $_error'), ElevatedButton(onPressed: _fetchData, child: const Text('Retry'))
-  ]));
+  Widget _buildError() => Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text('Fehler: $_error'),
+        ElevatedButton(onPressed: _fetchData, child: const Text('Retry'))
+      ]));
 
-  Widget _miniIcon(IconData i, Color c, String t) => Row(children: [Icon(i, size: 16, color: c), const SizedBox(width: 4), Text(t, style: TextStyle(fontSize: 12, color: c, fontWeight: FontWeight.bold))]);
-  Color _getAqiColor(int v) => v <= 40 ? _colors[1] : v <= 70 ? _colors[2] : _colors[4];
+  Widget _miniIcon(IconData i, Color c, String t) => Row(children: [
+        Icon(i, size: 16, color: c),
+        const SizedBox(width: 4),
+        Text(t,
+            style:
+                TextStyle(fontSize: 12, color: c, fontWeight: FontWeight.bold))
+      ]);
+  Color _getAqiColor(int v) => v <= 40
+      ? _colors[1]
+      : v <= 70
+          ? _colors[2]
+          : _colors[4];
 }
