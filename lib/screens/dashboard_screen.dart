@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
 
 import '../constants/app_colors.dart';
 import '../services/medication_service.dart';
@@ -16,7 +12,6 @@ import '../services/auth_service.dart';
 import '../services/fitbit_service.dart';
 import '../models/user.dart';
 import 'login_screen.dart';
-import '../../models/medication.dart';
 
 /// Zentrales Dashboard der App.
 /// Dieser Screen dient als Hauptübersicht nach dem Login und ermöglicht den Zugriff auf alle Kernfunktionen der App:
@@ -30,7 +25,6 @@ import '../../models/medication.dart';
 /// Zusätzlich verwaltet das Dashboard:
 /// - Benutzerbegrüßung
 /// - Logout
-/// - Benachrichtigungseinstellungen
 /// - Fitbit-Verbindung
 class DashboardScreen extends StatefulWidget {
   final ValueChanged<int>? onSwitchTab;
@@ -48,9 +42,7 @@ class DashboardScreen extends StatefulWidget {
 /// - Laden des aktuellen Benutzers
 /// - Verwaltung von App-Einstellungen
 /// - Navigation zu Unterseiten
-/// - Systemberechtigungen (Benachrichtigungen)
 class _DashboardScreenState extends State<DashboardScreen> {
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   /// Service zur Authentifizierung und Benutzerverwaltung.
   final _authService = AuthService();
   /// Service zur Verbindung und Synchronisation mit Fitbit.
@@ -59,8 +51,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   AppUser? _currentUser;
   /// Gibt an, ob Daten noch geladen werden.
   bool _isLoading = true;
-  /// Aktueller Status der Benachrichtigungen innerhalb der App.
-  bool _notificationsEnabled = false;
   /// Letzter Eintrag eines Symtopms
   String _lastEntryDate = 'Kein Eintrag';
   /// Trend der Symtopme
@@ -74,13 +64,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     /// Initialisiert deutsche Datumsformate (z. B. für Begrüßung).
     initializeDateFormatting('de_DE', null);
     _loadUser();
-    _loadNotificationPreference();
     _loadLastEntryDate();
     _loadTrend();
     _loadMedicationTimes();
     _calculateNextMedicationTime();
-    tz.initializeTimeZones();
-    _initializeNotifications();
   }
 
   @override
@@ -117,16 +104,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
     setState(() {
       _lastEntryDate = lastEntryDate;
-    });
-  }
-
-  /// Lädt die gespeicherte Benachrichtigungseinstellung.
-  /// Die Einstellung wird aus [SharedPreferences] gelesen und im lokalen State gespeichert.
-  Future<void> _loadNotificationPreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
     });
   }
 
@@ -180,160 +157,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }
-  }
-
-  // Initialisiert die Benachrichtigungen
-  void _initializeNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-    final InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
-  // Planen der Benachrichtigungen
-  void _scheduleNotifications(Medication med) async {
-    final location = tz.getLocation('Europe/Berlin');
-    final now = tz.TZDateTime.now(location);
-
-    for (int i = 0; i < med.times.length; i++) {
-      final timeParts = med.times[i].split(':');
-      final hour = int.parse(timeParts[0]);
-      final minute = int.parse(timeParts[1]);
-
-      // Einzigartige ID erstellen (Kombination aus Med-Hash und Zeit-Index)
-      final int notificationId = med.id.hashCode + i;
-
-      var scheduledTime = tz.TZDateTime(location, now.year, now.month, now.day, hour, minute);
-
-      if (med.frequencyType == 'weekly' && med.weekdays != null) {
-        // Logik für bestimmte Wochentage
-        for (int weekday in med.weekdays!) {
-          // Flutter nutzt 1=Mo...7=So. Wir müssen ggf. Tage addieren, bis der Wochentag passt
-          // Dies erfordert eine etwas komplexere Berechnung der nächsten Ausführung.
-
-          await _flutterLocalNotificationsPlugin.zonedSchedule(
-            notificationId + weekday, // Eindeutige ID pro Wochentag
-            'Medikament: ${med.name}',
-            'Es ist Zeit für deine Dosis: ${med.dosage}',
-            scheduledTime, // Hier müsste die Logik für den nächsten passenden Wochentag rein
-            _notificationDetails(),
-            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime, // WICHTIG
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-            uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-          );
-        }
-      } else {
-        // Standard: Täglich
-        if (scheduledTime.isBefore(now)) {
-          scheduledTime = scheduledTime.add(const Duration(days: 1));
-        }
-
-        await _flutterLocalNotificationsPlugin.zonedSchedule(
-          notificationId,
-          'Medikament: ${med.name}',
-          'Dosis: ${med.dosage}',
-          scheduledTime,
-          _notificationDetails(),
-          matchDateTimeComponents: DateTimeComponents.time,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        );
-      }
-    }
-  }
-
-// Hilfsmethode für Details
-  NotificationDetails _notificationDetails() {
-    return const NotificationDetails(
-      android: AndroidNotificationDetails(
-        'medication_channel_id',
-        'Medikations-Erinnerungen',
-        importance: Importance.max,
-        priority: Priority.high,
-      ),
-    );
-  }
-
-  /// Aktiviert oder deaktiviert Benachrichtigungen.
-  /// Prüft Systemberechtigungen und speichert die Entscheidung dauerhaft in [SharedPreferences].
-  Future<void> _toggleNotifications(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    if (value) {
-      // Überprüfen, ob die Benachrichtigungsberechtigung erteilt wurde
-      var status = await Permission.notification.status;
-
-      // Wenn die Berechtigung dauerhaft verweigert wurde
-      if (status.isPermanentlyDenied) {
-        if (mounted) {
-          _showSettingsDialog();
-          setState(() => _notificationsEnabled = false);
-        }
-        await prefs.setBool('notifications_enabled', false);
-        return;
-      }
-
-      // Berechtigungen anfordern
-      status = await Permission.notification.request();
-
-      if (mounted) {
-        setState(() {
-          _notificationsEnabled = status.isGranted;
-        });
-        await prefs.setBool('notifications_enabled', status.isGranted);
-
-        if (!mounted) return;
-        if (!status.isGranted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Benachrichtigungen wurden vom System abgelehnt.')),
-          );
-        }
-      }
-
-      // Wenn Benachrichtigungen erteilt wurden, Erinnerungen planen
-      if (_notificationsEnabled) {
-        // 1. Lade alle Medikamenten-Objekte (nicht nur die Zeiten)
-        final List<Medication> allMedications = await MedicationService().loadMedications();
-
-        // 2. Iteriere über jedes Medikament und plane die Benachrichtigungen
-        for (var med in allMedications) {
-          _scheduleNotifications(med);
-        }
-      }else {
-        // Wenn Benachrichtigungen deaktiviert werden, alle Benachrichtigungen stornieren
-        setState(() {
-          _notificationsEnabled = false;
-        });
-        await prefs.setBool('notifications_enabled', false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Benachrichtigungen in der App blockiert.')),
-          );
-
-          // Alle geplanten Benachrichtigungen löschen
-          await _flutterLocalNotificationsPlugin.cancelAll();
-        }
-      }
-    }
-  }
-
-  /// Öffnet einen Dialog mit Hinweis auf Systemeinstellungen.
-  /// Wird verwendet, wenn Benachrichtigungen dauerhaft auf Systemebene deaktiviert wurden.
-  void _showSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Berechtigung erforderlich'),
-        content: const Text('Du hast Benachrichtigungen dauerhaft deaktiviert. Bitte aktiviere sie in den Einstellungen.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
-          TextButton(onPressed: () {
-            openAppSettings();
-            Navigator.pop(context);
-          }, child: const Text('Einstellungen')),
-        ],
-      ),
-    );
   }
 
   /// Startet die Verbindung und Synchronisation mit Fitbit.
@@ -492,50 +315,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 24),
                 const Divider(),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.notifications_active,
-                              color: AppColors.primaryGreen,
-                            ),
-                            const SizedBox(width: 12),
-                            const Flexible(
-                              child: Text(
-                                'Benachrichtigungen',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: _notificationsEnabled,
-                        onChanged: _toggleNotifications,
-                        activeThumbColor: AppColors.primaryGreen,
-                      ),
-                    ],
-                  ),
-                ),
-
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

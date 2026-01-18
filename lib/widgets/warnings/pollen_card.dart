@@ -49,6 +49,8 @@ class PollenCard extends StatelessWidget {
 
   IconData _getPollenIcon(String pollenType) {
     switch (pollenType.toLowerCase()) {
+      case 'bäume':
+        return Icons.park;
       case 'gräser':
         return Icons.grass;
       case 'birke':

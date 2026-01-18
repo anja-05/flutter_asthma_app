@@ -390,6 +390,7 @@ class _SymptomEntryTabState extends State<SymptomEntryTab> {
               onPressed: _saveEntry,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: const Text('Eintrag speichern'),

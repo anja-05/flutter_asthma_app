@@ -20,3 +20,11 @@ https://pub.dev/packages/fitbitter
 
 ## Using Health Connect with Flutter
 https://pub.dev/packages/flutter_health_connect
+
+## Notifications
+
+The notification feature for the medication plan is not properly implemented.
+
+## Peak-Flow Verlauf
+
+This is only a dummy screen. Not usable yet.
